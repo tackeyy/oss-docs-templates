@@ -2,7 +2,7 @@
 
 ## Overview
 
-Zoomy uses [Vitest](https://vitest.dev/) as its testing framework. All code contributions must include comprehensive tests.
+{{PROJECT_NAME}} uses [Vitest](https://vitest.dev/) as its testing framework. All code contributions must include comprehensive tests.
 
 ## Test Philosophy
 
@@ -334,5 +334,5 @@ const { myFunction } = await import("../myModule.js");
 
 If you have questions about testing:
 1. Check existing test files for examples
-2. Ask in [GitHub Discussions](https://github.com/tackeyy/zoomy/discussions)
+2. Ask in [GitHub Discussions](https://github.com/tackeyy/{{REPO_NAME}}/discussions)
 3. Open an issue with the `question` label

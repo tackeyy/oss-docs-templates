@@ -1,15 +1,17 @@
 # OSS Documentation Templates
 
-Reusable OSS documentation templates with one-command setup. Based on industry best practices
-(GitHub CLI, AWS CLI, Contributor Covenant).
+Reusable OSS documentation templates with one-command setup and multi-language support. Based on
+industry best practices (GitHub CLI, AWS CLI, Contributor Covenant).
 
 ## 🚀 Quick Start
+
+### Basic Templates (Language-Independent)
 
 ```bash
 # Clone this repository
 git clone https://github.com/tackeyy/oss-docs-templates.git ~/templates/oss-docs
 
-# Apply to your project
+# Apply base templates only (CODE_OF_CONDUCT, issue/PR templates)
 bash ~/templates/oss-docs/apply-templates.sh \
   ~/dev/your-project \
   your-project-name \
@@ -17,17 +19,43 @@ bash ~/templates/oss-docs/apply-templates.sh \
   your-repo-name
 ```
 
+### With Language-Specific Configuration
+
+```bash
+# Apply with Node.js lint configuration
+bash ~/templates/oss-docs/apply-templates.sh \
+  ~/dev/your-project \
+  your-project-name \
+  your-github-username \
+  your-repo-name \
+  --lang=node
+
+# Supported languages: node, go, swift, shell, python
+```
+
 See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 
 ## 📦 What's Included
 
+### Base Templates (Always Applied)
+
 | File | Purpose | Customization |
 |------|---------|---------------|
-| **CONTRIBUTING.md** | Contribution guidelines | ⭐⭐⭐ High |
 | **CODE_OF_CONDUCT.md** | Community standards (Contributor Covenant v2.1) | ⭐ Low |
-| **docs/TESTING.md** | Testing strategy and guide | ⭐⭐⭐ High |
 | **.github/ISSUE_TEMPLATE/** | Bug report, feature request, question templates | ⭐⭐ Medium |
 | **.github/PULL_REQUEST_TEMPLATE.md** | PR checklist and guidelines | ⭐⭐ Medium |
+
+### Language-Specific Templates (Optional)
+
+| Language | Files Included | Linter/Formatter |
+|----------|----------------|------------------|
+| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, .markdownlint.json, .yamllint.yml | markdownlint, yamllint, shellcheck |
+| **Go** | CONTRIBUTING.md, TESTING.md, .golangci.yml | golangci-lint |
+| **Swift** | CONTRIBUTING.md, TESTING.md, .swiftlint.yml | SwiftLint |
+| **Shell** | CONTRIBUTING.md, TESTING.md, .shellcheckrc | shellcheck, shfmt, bats |
+| **Python** | CONTRIBUTING.md, TESTING.md, pyproject.toml | ruff, mypy, pytest |
+
+All language configs include GitHub Actions workflow for automated linting on PR.
 
 ## 📚 Documentation
 
@@ -38,98 +66,125 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 ## ✨ Features
 
 - **One-command setup** - Apply all templates with a single script
+- **Language-specific configs** - Tailored CONTRIBUTING.md and lint setup for 5 languages
 - **Automatic customization** - Project name and repository auto-replacement
+- **GitHub Actions ready** - Automated lint checks on every PR
 - **Industry standards** - Based on GitHub CLI, AWS CLI, Contributor Covenant
-- **Multi-language support** - Default for Node.js/TypeScript, easy to adapt for Python, Go, Rust
 - **Privacy-conscious** - Contact via X (Twitter) [@3chhe](https://x.com/3chhe) instead of email
 
 ## 🎯 Use Cases
 
-### New CLI Tool Project
+### Node.js/TypeScript Project
 
 ```bash
-mkdir ~/dev/awesome-cli && cd ~/dev/awesome-cli
-npm init -y
-
 bash ~/templates/oss-docs/apply-templates.sh \
-  . awesome-cli your-username awesome-cli
+  ~/dev/my-cli my-cli tackeyy my-cli --lang=node
 
-# Almost ready to use for Node.js/TypeScript projects
-git add . && git commit -m "docs: add OSS contribution guidelines"
+cd ~/dev/my-cli
+npm install
+npm run lint
 ```
 
-### Existing Python Project
+### Go Project
 
 ```bash
-cd ~/dev/python-project
-
 bash ~/templates/oss-docs/apply-templates.sh \
-  . python-project your-username python-project
+  ~/dev/my-go-app my-go-app tackeyy my-go-app --lang=go
 
-# Customize for Python
-sed -i '' 's/npm install/pip install -r requirements.txt/g' CONTRIBUTING.md
-sed -i '' 's/npm test/pytest/g' CONTRIBUTING.md
-sed -i '' 's/Vitest/pytest/g' docs/TESTING.md
-
-git add . && git commit -m "docs: add OSS contribution guidelines"
+cd ~/dev/my-go-app
+go mod download
+golangci-lint run
 ```
 
-See [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) for more examples.
+### Python Project
+
+```bash
+bash ~/templates/oss-docs/apply-templates.sh \
+  ~/dev/my-python-app my-python-app tackeyy my-python-app --lang=python
+
+cd ~/dev/my-python-app
+pip install ruff mypy pytest
+ruff check .
+```
+
+### Swift Project
+
+```bash
+bash ~/templates/oss-docs/apply-templates.sh \
+  ~/dev/my-swift-app my-swift-app tackeyy my-swift-app --lang=swift
+
+cd ~/dev/my-swift-app
+swiftlint
+```
+
+### Shell Script Project
+
+```bash
+bash ~/templates/oss-docs/apply-templates.sh \
+  ~/dev/my-scripts my-scripts tackeyy my-scripts --lang=shell
+
+cd ~/dev/my-scripts
+shellcheck *.sh
+```
 
 ## 🛠️ How It Works
 
 The `apply-templates.sh` script:
 
-1. Copies template files to your project
-2. Automatically replaces `zoomy` with your project name
-3. Replaces `tackeyy/zoomy` with your repository path
-4. Customizes GitHub issue/PR templates
-5. Provides next steps for further customization
+1. **Copies base templates** - CODE_OF_CONDUCT.md and .github templates (language-independent)
+2. **Copies language-specific files** (if --lang specified):
+   - CONTRIBUTING.md tailored for the language
+   - TESTING.md with language-specific test framework docs
+   - Lint configuration files (.golangci.yml, .swiftlint.yml, etc.)
+   - GitHub Actions workflow for automated linting
+3. **Replaces placeholders** - Automatically substitutes project name and repository info
+4. **Provides next steps** - Shows language-specific setup instructions
 
 ## 📋 Customization Checklist
 
 After applying templates, review and customize:
 
-- [ ] **CONTRIBUTING.md**
+- [ ] **CONTRIBUTING.md** (if applied with --lang)
   - [ ] Development setup instructions
-  - [ ] Technology stack (Node.js → Python/Go/etc.)
+  - [ ] Project-specific coding standards
   - [ ] Test and build commands
-- [ ] **docs/TESTING.md**
-  - [ ] Test framework (Vitest → pytest/Go test/etc.)
+- [ ] **docs/TESTING.md** (if applied with --lang)
   - [ ] Test directory structure
   - [ ] Test execution commands
+  - [ ] Coverage requirements
 - [ ] **CODE_OF_CONDUCT.md**
   - [ ] Contact information (currently: X [@3chhe](https://x.com/3chhe))
 - [ ] **.github templates**
-  - [ ] Issue labels
-  - [ ] Version check commands
+  - [ ] Issue labels (if different from defaults)
+  - [ ] PR checklist items
 
-## 🌍 Multi-Language Support
+## 🌍 Language Support Details
 
-### Node.js/TypeScript (Default)
-- ✅ Ready to use as-is
-- Test framework: Vitest/Jest
-- Package manager: npm/yarn
-
-### Python
-Replace after applying:
-- `npm install` → `pip install -r requirements.txt`
-- `npm test` → `pytest`
-- `Vitest` → `pytest`
+### Node.js
+- ✅ Linters: markdownlint, yamllint, shellcheck, eslint (optional)
+- ✅ Test framework: Jest/Vitest
+- ✅ Package manager: npm/yarn/pnpm
 
 ### Go
-Replace after applying:
-- `npm install` → `go mod download`
-- `npm test` → `go test ./...`
-- `Vitest` → `Go testing package`
+- ✅ Linter: golangci-lint (includes errcheck, gosimple, govet, staticcheck, etc.)
+- ✅ Test framework: Go testing package
+- ✅ Coverage: Built-in go test -cover
 
-### Rust
-Replace after applying:
-- `npm install` → `cargo build`
-- `npm test` → `cargo test`
-- `Vitest` → `Rust built-in test framework`
+### Swift
+- ✅ Linter: SwiftLint
+- ✅ Test framework: XCTest
+- ✅ UI Testing: XCUITest
 
-See [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) for detailed customization commands.
+### Shell
+- ✅ Linter: shellcheck, shfmt
+- ✅ Test framework: bats (Bash Automated Testing System)
+- ✅ Supports: bash, zsh, sh
+
+### Python
+- ✅ Linter: ruff (fast Python linter)
+- ✅ Type checker: mypy
+- ✅ Test framework: pytest
+- ✅ Python versions: 3.9+
 
 ## 📖 Best Practices Reference
 

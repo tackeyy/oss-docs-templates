@@ -1,0 +1,16 @@
+# ShellCheck configuration file
+
+# Disable specific checks
+# SC2086: Double quote to prevent globbing and word splitting
+# disable=SC2086
+
+# Set shell dialect
+shell=bash
+
+# Enable optional checks
+enable=all
+
+# Exclude directories
+exclude-dir=.git
+exclude-dir=node_modules
+exclude-dir=.build

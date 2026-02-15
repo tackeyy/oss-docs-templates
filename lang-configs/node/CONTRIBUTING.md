@@ -1,11 +1,11 @@
-# Contributing to Zoomy
+# Contributing to {{PROJECT_NAME}}
 
-Thank you for your interest in contributing to Zoomy! This document provides guidelines and
+Thank you for your interest in contributing to {{PROJECT_NAME}}! This document provides guidelines and
 instructions for contributing to the project.
 
 ## 🙏 Welcome!
 
-Zoomy is a CLI tool for managing Zoom meetings via Server-to-Server OAuth. We welcome
+{{PROJECT_NAME}} is a CLI tool for managing Zoom meetings via Server-to-Server OAuth. We welcome
 contributions from everyone, whether you're fixing a bug, adding a feature, or improving
 documentation.
 
@@ -29,7 +29,7 @@ documentation.
 - 💡 **Suggesting features** - Have an idea? We'd love to hear it
 - 📝 **Improving documentation** - Help make our docs clearer
 - 🔧 **Submitting bug fixes** - Fix issues and help improve stability
-- ✨ **Adding new features** - Expand Zoomy's capabilities (discuss first!)
+- ✨ **Adding new features** - Expand {{PROJECT_NAME}}'s capabilities (discuss first!)
 
 ## 🎯 Before You Start
 
@@ -49,8 +49,8 @@ documentation.
 
 ```bash
 # 1. Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/zoomy.git
-cd zoomy
+git clone https://github.com/YOUR_USERNAME/{{REPO_NAME}}.git
+cd {{REPO_NAME}}
 
 # 2. Install dependencies
 npm install
@@ -243,10 +243,10 @@ Reviewers will check:
 
 ## 📬 Getting Help
 
-- 💬 **Questions** - Open a [GitHub Discussion](https://github.com/tackeyy/zoomy/discussions)
-- 🐛 **Bug Reports** - Open an [Issue](https://github.com/tackeyy/zoomy/issues/new?template=bug_report.yml)
-- 💡 **Feature Requests** - Open an [Issue](https://github.com/tackeyy/zoomy/issues/new?template=feature_request.yml)
-- ❓ **General Questions** - Open an [Issue](https://github.com/tackeyy/zoomy/issues/new?template=question.yml)
+- 💬 **Questions** - Open a [GitHub Discussion](https://github.com/tackeyy/{{REPO_NAME}}/discussions)
+- 🐛 **Bug Reports** - Open an [Issue](https://github.com/tackeyy/{{REPO_NAME}}/issues/new?template=bug_report.yml)
+- 💡 **Feature Requests** - Open an [Issue](https://github.com/tackeyy/{{REPO_NAME}}/issues/new?template=feature_request.yml)
+- ❓ **General Questions** - Open an [Issue](https://github.com/tackeyy/{{REPO_NAME}}/issues/new?template=question.yml)
 
 ## 🙌 Recognition
 
@@ -258,4 +258,4 @@ All contributors are recognized in:
 
 ---
 
-Thank you for contributing to Zoomy! Your efforts help make this tool better for everyone.
+Thank you for contributing to {{PROJECT_NAME}}! Your efforts help make this tool better for everyone.
