@@ -20,9 +20,9 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
 **実行結果:**
 ```
 Applying OSS documentation templates...
-Target: /Users/tackeyy/dev/awesome-cli
+Target: /Users/username/dev/awesome-cli
 Project: awesome-cli
-Repository: tackeyy/awesome-cli
+Repository: your-username/awesome-cli
 
 ✓ CODE_OF_CONDUCT.md copied
 ✓ CONTRIBUTING.md copied and customized
