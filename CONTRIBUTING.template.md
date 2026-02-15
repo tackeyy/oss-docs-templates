@@ -1,10 +1,13 @@
 # Contributing to Zoomy
 
-Thank you for your interest in contributing to Zoomy! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to Zoomy! This document provides guidelines and
+instructions for contributing to the project.
 
 ## 🙏 Welcome!
 
-Zoomy is a CLI tool for managing Zoom meetings via Server-to-Server OAuth. We welcome contributions from everyone, whether you're fixing a bug, adding a feature, or improving documentation.
+Zoomy is a CLI tool for managing Zoom meetings via Server-to-Server OAuth. We welcome
+contributions from everyone, whether you're fixing a bug, adding a feature, or improving
+documentation.
 
 ## 📖 Table of Contents
 

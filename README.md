@@ -1,6 +1,7 @@
 # OSS Documentation Templates
 
-Reusable OSS documentation templates with one-command setup. Based on industry best practices (GitHub CLI, AWS CLI, Contributor Covenant).
+Reusable OSS documentation templates with one-command setup. Based on industry best practices
+(GitHub CLI, AWS CLI, Contributor Covenant).
 
 ## 🚀 Quick Start
 
