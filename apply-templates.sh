@@ -90,6 +90,15 @@ find "$TARGET_DIR/.github/ISSUE_TEMPLATE" -type f -name "*.yml" -exec sed -i '' 
 sed -i '' "s/zoomy/$PROJECT_NAME/g" "$TARGET_DIR/.github/PULL_REQUEST_TEMPLATE.md"
 echo "✓ .github templates copied and customized"
 
+# Copy README.ja.md template (if exists)
+if [ -f "$SCRIPT_DIR/base/README.ja.md.template" ]; then
+  cp "$SCRIPT_DIR/base/README.ja.md.template" "$TARGET_DIR/README.ja.md"
+  sed -i '' "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" "$TARGET_DIR/README.ja.md"
+  sed -i '' "s/{{REPO_OWNER}}/$REPO_OWNER/g" "$TARGET_DIR/README.ja.md"
+  sed -i '' "s/{{REPO_NAME}}/$REPO_NAME/g" "$TARGET_DIR/README.ja.md"
+  echo "✓ README.ja.md template copied (customize description and content)"
+fi
+
 # Copy language-specific templates if specified
 if [ -n "$LANGUAGE" ]; then
   echo -e "${YELLOW}Copying $LANGUAGE-specific templates...${NC}"
@@ -190,4 +199,6 @@ else
   echo "2. Customize .github templates for your project"
   echo "3. To add language-specific templates, run with --lang=<language>"
   echo "   Example: $0 $TARGET_DIR $PROJECT_NAME $REPO_OWNER $REPO_NAME --lang=node"
+  echo "4. Customize README.ja.md with project-specific Japanese content"
+  echo "5. Add language switcher to README.md: **English** | [日本語](README.ja.md)"
 fi
