@@ -99,6 +99,30 @@ if [ -f "$SCRIPT_DIR/base/README.ja.md.template" ]; then
   echo "✓ README.ja.md template copied (customize description and content)"
 fi
 
+# Copy SECURITY.md template (if exists)
+if [ -f "$SCRIPT_DIR/base/SECURITY.md.template" ]; then
+  cp "$SCRIPT_DIR/base/SECURITY.md.template" "$TARGET_DIR/SECURITY.md"
+  sed -i '' "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" "$TARGET_DIR/SECURITY.md"
+  sed -i '' "s/{{REPO_OWNER}}/$REPO_OWNER/g" "$TARGET_DIR/SECURITY.md"
+  sed -i '' "s/{{REPO_NAME}}/$REPO_NAME/g" "$TARGET_DIR/SECURITY.md"
+  echo "✓ SECURITY.md template copied (set CONTACT_HANDLE and CONTACT_EMAIL)"
+fi
+
+# Copy .changeset README template (if exists)
+if [ -f "$SCRIPT_DIR/base/.changeset/README.md.template" ]; then
+  mkdir -p "$TARGET_DIR/.changeset"
+  cp "$SCRIPT_DIR/base/.changeset/README.md.template" "$TARGET_DIR/.changeset/README.md"
+  echo "✓ .changeset/README.md template copied"
+fi
+
+# Copy dependabot.yml template (if exists)
+if [ -f "$SCRIPT_DIR/base/.github/dependabot.yml.template" ]; then
+  mkdir -p "$TARGET_DIR/.github"
+  cp "$SCRIPT_DIR/base/.github/dependabot.yml.template" "$TARGET_DIR/.github/dependabot.yml"
+  sed -i '' "s/{{REPO_OWNER}}/$REPO_OWNER/g" "$TARGET_DIR/.github/dependabot.yml"
+  echo "✓ .github/dependabot.yml template copied and customized"
+fi
+
 # Copy language-specific templates if specified
 if [ -n "$LANGUAGE" ]; then
   echo -e "${YELLOW}Copying $LANGUAGE-specific templates...${NC}"
@@ -130,6 +154,13 @@ if [ -n "$LANGUAGE" ]; then
       [ -f "$LANG_DIR/package.json" ] && cp "$LANG_DIR/package.json" "$TARGET_DIR/" && echo "✓ package.json copied"
       [ -f "$LANG_DIR/.markdownlint.json" ] && cp "$LANG_DIR/.markdownlint.json" "$TARGET_DIR/" && echo "✓ .markdownlint.json copied"
       [ -f "$LANG_DIR/.yamllint.yml" ] && cp "$LANG_DIR/.yamllint.yml" "$TARGET_DIR/" && echo "✓ .yamllint.yml copied"
+      # Node 22 + TypeScript ESM configs (MCP SDK compatible)
+      if [ -f "$LANG_DIR/tsconfig.json" ]; then
+        [ ! -f "$TARGET_DIR/tsconfig.json" ] && cp "$LANG_DIR/tsconfig.json" "$TARGET_DIR/" && echo "✓ tsconfig.json copied (Node 22 + ESM + NodeNext)"
+      fi
+      if [ -f "$LANG_DIR/vitest.config.ts" ]; then
+        [ ! -f "$TARGET_DIR/vitest.config.ts" ] && cp "$LANG_DIR/vitest.config.ts" "$TARGET_DIR/" && echo "✓ vitest.config.ts copied"
+      fi
       ;;
     go)
       [ -f "$LANG_DIR/.golangci.yml" ] && cp "$LANG_DIR/.golangci.yml" "$TARGET_DIR/" && echo "✓ .golangci.yml copied"
@@ -156,6 +187,15 @@ if [ -n "$LANGUAGE" ]; then
     sed -i '' "s/{{REPO_NAME}}/$REPO_NAME/g" "$TARGET_DIR/.github/workflows/lint.yml"
     echo "✓ .github/workflows/lint.yml copied and customized"
   fi
+  # Additional workflows: ci.yml (typecheck+lint+test+build) and release.yml (changesets)
+  if [ -f "$LANG_DIR/workflows/ci.yml" ]; then
+    mkdir -p "$TARGET_DIR/.github/workflows"
+    [ ! -f "$TARGET_DIR/.github/workflows/ci.yml" ] && cp "$LANG_DIR/workflows/ci.yml" "$TARGET_DIR/.github/workflows/ci.yml" && echo "✓ .github/workflows/ci.yml copied"
+  fi
+  if [ -f "$LANG_DIR/workflows/release.yml" ]; then
+    mkdir -p "$TARGET_DIR/.github/workflows"
+    [ ! -f "$TARGET_DIR/.github/workflows/release.yml" ] && cp "$LANG_DIR/workflows/release.yml" "$TARGET_DIR/.github/workflows/release.yml" && echo "✓ .github/workflows/release.yml copied (set NPM_TOKEN secret)"
+  fi
 fi
 
 echo ""
@@ -168,7 +208,11 @@ if [ -n "$LANGUAGE" ]; then
     node)
       echo "1. Run: cd $TARGET_DIR && npm install"
       echo "2. Run lints: npm run lint"
-      echo "3. Review and customize CONTRIBUTING.md"
+      echo "3. Run type check: npm run typecheck"
+      echo "4. Run tests: npm test"
+      echo "5. Review and customize CONTRIBUTING.md"
+      echo "6. Set CONTACT_HANDLE and CONTACT_EMAIL in SECURITY.md"
+      echo "7. Add NPM_TOKEN secret to GitHub repository settings (for release.yml)"
       ;;
     go)
       echo "1. Install golangci-lint: https://golangci-lint.run/usage/install/"

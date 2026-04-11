@@ -44,12 +44,15 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 | **CODE_OF_CONDUCT.md** | Community standards (Contributor Covenant v2.1) | ⭐ Low |
 | **.github/ISSUE_TEMPLATE/** | Bug report, feature request, question templates | ⭐⭐ Medium |
 | **.github/PULL_REQUEST_TEMPLATE.md** | PR checklist and guidelines | ⭐⭐ Medium |
+| **SECURITY.md** | Vulnerability reporting policy and response process | ⭐⭐ Medium |
+| **.changeset/README.md** | Changesets versioning guide | ⭐ Low |
+| **.github/dependabot.yml** | Automated dependency updates (npm + GitHub Actions, weekly) | ⭐ Low |
 
 ### Language-Specific Templates (Optional)
 
 | Language | Files Included | Linter/Formatter |
 |----------|----------------|------------------|
-| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, .markdownlint.json, .yamllint.yml | markdownlint, yamllint, shellcheck |
+| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, tsconfig.json, vitest.config.ts, .markdownlint.json, .yamllint.yml, .github/workflows/ci.yml, .github/workflows/release.yml | markdownlint, yamllint, shellcheck, TypeScript, Vitest, changesets |
 | **Go** | CONTRIBUTING.md, TESTING.md, .golangci.yml | golangci-lint |
 | **Swift** | CONTRIBUTING.md, TESTING.md, .swiftlint.yml | SwiftLint |
 | **Shell** | CONTRIBUTING.md, TESTING.md, .shellcheckrc | shellcheck, shfmt, bats |
@@ -160,10 +163,13 @@ After applying templates, review and customize:
 
 ## 🌍 Language Support Details
 
-### Node.js
+### Node.js (+ MCP SDK Support)
 - ✅ Linters: markdownlint, yamllint, shellcheck, eslint (optional)
-- ✅ Test framework: Jest/Vitest
+- ✅ Test framework: Jest/Vitest (vitest.config.ts included)
 - ✅ Package manager: npm/yarn/pnpm
+- ✅ TypeScript: tsconfig.json for Node 22 + ESM + NodeNext (compatible with `@modelcontextprotocol/sdk`)
+- ✅ CI workflow: typecheck + lint + test + build (ci.yml)
+- ✅ Release workflow: changesets-based npm publish (release.yml)
 
 ### Go
 - ✅ Linter: golangci-lint (includes errcheck, gosimple, govet, staticcheck, etc.)
