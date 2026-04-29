@@ -56,11 +56,10 @@ git diff  # 変更内容を確認
 ### Python プロジェクト
 
 ```bash
-bash ~/dev/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-python-app
-# その後、CONTRIBUTING.md の npm コマンドを pip に置換
-sed -i '' 's/npm install/pip install -r requirements.txt/g' CONTRIBUTING.md
-sed -i '' 's/npm test/pytest/g' CONTRIBUTING.md
+bash ~/dev/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-python-app --lang=python
 ```
+
+`--lang=node|go|swift|shell|python` を指定すると、言語別の `CONTRIBUTING.md`、`docs/TESTING.md`、lint 設定、GitHub Actions workflow が適用されます。
 
 ## ⚙️ カスタマイズ必須箇所
 
@@ -84,4 +83,4 @@ sed -i '' 's/npm test/pytest/g' CONTRIBUTING.md
 問題が発生したら:
 1. [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) のトラブルシューティングを確認
 2. [README.md](README.md) の詳細な説明を参照
-3. 元のプロジェクト（zoomy）のドキュメントを確認
+3. README.md と Usage 表示を確認

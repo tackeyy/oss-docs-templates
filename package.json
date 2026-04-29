@@ -1,20 +1,19 @@
 {
-  "name": "{{REPO_NAME}}",
+  "name": "oss-docs-templates",
   "version": "1.0.0",
-  "description": "{{PROJECT_NAME}}",
+  "description": "Reusable OSS documentation templates with one-command setup",
   "private": true,
   "scripts": {
     "lint": "npm run lint:md && npm run lint:sh",
-    "lint:md": "markdownlint-cli2 '**/*.md' '!node_modules' '!CONTRIBUTING_GUIDE_PROPOSAL.md'",
-    "lint:yaml": "yamllint .",
-    "lint:sh": "find . -name '*.sh' -not -path './node_modules/*' -print0 | xargs -0 shellcheck"
+    "lint:md": "markdownlint-cli2 '**/*.md' '!node_modules/**' '!CONTRIBUTING_GUIDE_PROPOSAL.md'",
+    "lint:sh": "shellcheck apply-templates.sh"
   },
   "devDependencies": {
     "markdownlint-cli2": "^0.12.1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}.git"
+    "url": "https://github.com/tackeyy/oss-docs-templates.git"
   },
   "keywords": [
     "oss",

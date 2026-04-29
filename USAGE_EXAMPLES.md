@@ -14,7 +14,8 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
   ~/dev/awesome-cli \
   awesome-cli \
   tackeyy \
-  awesome-cli
+  awesome-cli \
+  --lang=node
 ```
 
 **実行結果:**
@@ -25,6 +26,8 @@ Project: awesome-cli
 Repository: your-username/awesome-cli
 
 ✓ CODE_OF_CONDUCT.md copied
+✓ README.ja.md template copied (customize description and content)
+✓ SECURITY.md template copied and customized
 ✓ CONTRIBUTING.md copied and customized
 ✓ docs/TESTING.md copied and customized
 ✓ .github templates copied and customized
@@ -49,21 +52,9 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
 
 ### Python プロジェクト
 
-テンプレート適用後、以下を手動で置換:
-
 ```bash
 cd ~/dev/python-project
-
-# CONTRIBUTING.md
-sed -i '' 's/npm install/pip install -r requirements.txt/g' CONTRIBUTING.md
-sed -i '' 's/npm test/pytest/g' CONTRIBUTING.md
-sed -i '' 's/npm run build/python setup.py build/g' CONTRIBUTING.md
-sed -i '' 's/Node.js 18+/Python 3.9+/g' CONTRIBUTING.md
-
-# docs/TESTING.md
-sed -i '' 's/Vitest/pytest/g' docs/TESTING.md
-sed -i '' 's/npm test/pytest/g' docs/TESTING.md
-sed -i '' 's/\.test\.ts/_test.py/g' docs/TESTING.md
+bash ~/dev/templates/oss-docs/apply-templates.sh . python-project tackeyy python-project --lang=python
 ```
 
 ### Go プロジェクト
@@ -71,32 +62,14 @@ sed -i '' 's/\.test\.ts/_test.py/g' docs/TESTING.md
 ```bash
 cd ~/dev/go-project
 
-# CONTRIBUTING.md
-sed -i '' 's/npm install/go mod download/g' CONTRIBUTING.md
-sed -i '' 's/npm test/go test .\/\.\.\./g' CONTRIBUTING.md
-sed -i '' 's/npm run build/go build/g' CONTRIBUTING.md
-sed -i '' 's/Node.js 18+/Go 1.21+/g' CONTRIBUTING.md
-
-# docs/TESTING.md
-sed -i '' 's/Vitest/Go testing package/g' docs/TESTING.md
-sed -i '' 's/npm test/go test .\/\.\.\./g' docs/TESTING.md
-sed -i '' 's/\.test\.ts/_test.go/g' docs/TESTING.md
+bash ~/dev/templates/oss-docs/apply-templates.sh . go-project tackeyy go-project --lang=go
 ```
 
-### Rust プロジェクト
+### Shell プロジェクト
 
 ```bash
-cd ~/dev/rust-project
-
-# CONTRIBUTING.md
-sed -i '' 's/npm install/cargo build/g' CONTRIBUTING.md
-sed -i '' 's/npm test/cargo test/g' CONTRIBUTING.md
-sed -i '' 's/npm run build/cargo build --release/g' CONTRIBUTING.md
-sed -i '' 's/Node.js 18+/Rust 1.70+/g' CONTRIBUTING.md
-
-# docs/TESTING.md
-sed -i '' 's/Vitest/Rust built-in test framework/g' docs/TESTING.md
-sed -i '' 's/npm test/cargo test/g' docs/TESTING.md
+cd ~/dev/shell-project
+bash ~/dev/templates/oss-docs/apply-templates.sh . shell-project tackeyy shell-project --lang=shell
 ```
 
 ## 高度な使い方
@@ -131,8 +104,7 @@ cp -r ~/dev/templates/oss-docs ~/dev/templates/oss-docs-python
 
 # カスタマイズ
 cd ~/dev/templates/oss-docs-python
-sed -i '' 's/npm install/pip install -r requirements.txt/g' CONTRIBUTING.template.md
-sed -i '' 's/npm test/pytest/g' CONTRIBUTING.template.md
+# lang-configs/python/ 配下のテンプレートを編集
 # ...その他のカスタマイズ
 ```
 
@@ -207,16 +179,15 @@ EOF
 
 ```bash
 # テンプレートの最新版を確認
-cd ~/dev/zoomy
+cd ~/dev/templates/oss-docs
 git pull
 
 # 変更があればテンプレートを更新
-cp CONTRIBUTING.md ~/dev/templates/oss-docs/CONTRIBUTING.template.md
-cp docs/TESTING.md ~/dev/templates/oss-docs/TESTING.template.md
+# lang-configs/<language>/CONTRIBUTING.md や TESTING.md を編集
 
 # 既存プロジェクトに差分を反映（選択的に）
 cd ~/dev/your-project
-diff ~/dev/templates/oss-docs/CONTRIBUTING.template.md CONTRIBUTING.md
+diff ~/dev/templates/oss-docs/lang-configs/node/CONTRIBUTING.md CONTRIBUTING.md
 ```
 
 ## チェックリスト

@@ -24,7 +24,7 @@ body:
       label: Proposed solution
       description: How would you like this feature to work?
       placeholder: |
-        Add a new command `zoomy export` that allows users to...
+        Add a new option or workflow that allows users to...
     validations:
       required: true
 

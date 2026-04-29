@@ -5,9 +5,8 @@ instructions for contributing to the project.
 
 ## 🙏 Welcome!
 
-{{PROJECT_NAME}} is a CLI tool for managing Zoom meetings via Server-to-Server OAuth. We welcome
-contributions from everyone, whether you're fixing a bug, adding a feature, or improving
-documentation.
+{{PROJECT_NAME}} is a Node.js/TypeScript project. We welcome contributions from everyone, whether
+you're fixing a bug, adding a feature, improving tests, or improving documentation.
 
 ## 📖 Table of Contents
 
@@ -42,8 +41,8 @@ documentation.
 
 ### Prerequisites
 
-- Node.js 18+ / npm 9+
-- Zoom Server-to-Server OAuth credentials ([How to get credentials](https://developers.zoom.us/docs/internal-apps/))
+- Node.js 22+ / npm 10+
+- Git
 
 ### Setup Steps
 
@@ -55,12 +54,8 @@ cd {{REPO_NAME}}
 # 2. Install dependencies
 npm install
 
-# 3. Set up environment variables
-cp .env.example .env
-# Edit .env with your Zoom credentials:
-# ZOOM_ACCOUNT_ID=your_account_id
-# ZOOM_CLIENT_ID=your_client_id
-# ZOOM_CLIENT_SECRET=your_client_secret
+# 3. Set up environment variables if the project provides an example
+[ -f .env.example ] && cp .env.example .env
 
 # 4. Run tests to verify setup
 npm test
@@ -68,8 +63,8 @@ npm test
 # 5. Build the project
 npm run build
 
-# 6. Test the CLI locally
-node dist/index.js --version
+# 6. Test the project locally using its documented command
+npm start -- --help
 ```
 
 ## 📐 Coding Standards
@@ -243,10 +238,10 @@ Reviewers will check:
 
 ## 📬 Getting Help
 
-- 💬 **Questions** - Open a [GitHub Discussion](https://github.com/tackeyy/{{REPO_NAME}}/discussions)
-- 🐛 **Bug Reports** - Open an [Issue](https://github.com/tackeyy/{{REPO_NAME}}/issues/new?template=bug_report.yml)
-- 💡 **Feature Requests** - Open an [Issue](https://github.com/tackeyy/{{REPO_NAME}}/issues/new?template=feature_request.yml)
-- ❓ **General Questions** - Open an [Issue](https://github.com/tackeyy/{{REPO_NAME}}/issues/new?template=question.yml)
+- 💬 **Questions** - Open a [GitHub Discussion](https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/discussions)
+- 🐛 **Bug Reports** - Open an [Issue](https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/issues/new?template=bug_report.yml)
+- 💡 **Feature Requests** - Open an [Issue](https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/issues/new?template=feature_request.yml)
+- ❓ **General Questions** - Open an [Issue](https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/issues/new?template=question.yml)
 
 ## 🙌 Recognition
 
@@ -258,4 +253,4 @@ All contributors are recognized in:
 
 ---
 
-Thank you for contributing to {{PROJECT_NAME}}! Your efforts help make this tool better for everyone.
+Thank you for contributing to {{PROJECT_NAME}}! Your efforts help make this project better for everyone.

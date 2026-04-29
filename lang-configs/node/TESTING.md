@@ -2,7 +2,8 @@
 
 ## Overview
 
-{{PROJECT_NAME}} uses [Vitest](https://vitest.dev/) as its testing framework. All code contributions must include comprehensive tests.
+{{PROJECT_NAME}} uses [Vitest](https://vitest.dev/) as its testing framework.
+All code contributions must include comprehensive tests.
 
 ## Test Philosophy
 
@@ -18,7 +19,7 @@
 ```
 src/
   __tests__/
-    api.test.ts              # Zoom API integration tests
+    api.test.ts              # API integration tests
     auth.test.ts             # OAuth token management tests
     cli-output.test.ts       # CLI output formatting tests
     cli-validation.test.ts   # CLI input validation tests
@@ -265,7 +266,7 @@ afterEach(() => {
 beforeEach(() => {
   vi.resetModules();
   process.env = { ...originalEnv };
-  process.env["ZOOM_ACCOUNT_ID"] = "test-account";
+  process.env["API_TOKEN"] = "test-token";
 });
 
 afterEach(() => {
@@ -334,5 +335,5 @@ const { myFunction } = await import("../myModule.js");
 
 If you have questions about testing:
 1. Check existing test files for examples
-2. Ask in [GitHub Discussions](https://github.com/tackeyy/{{REPO_NAME}}/discussions)
+2. Ask in [GitHub Discussions](https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/discussions)
 3. Open an issue with the `question` label

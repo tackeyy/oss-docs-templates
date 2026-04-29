@@ -16,7 +16,9 @@ bash ~/templates/oss-docs/apply-templates.sh \
   ~/dev/your-project \
   your-project-name \
   your-github-username \
-  your-repo-name
+  your-repo-name \
+  --contact-handle=your-handle \
+  --contact-email=security@example.com
 ```
 
 ### With Language-Specific Configuration
@@ -28,7 +30,8 @@ bash ~/templates/oss-docs/apply-templates.sh \
   your-project-name \
   your-github-username \
   your-repo-name \
-  --lang=node
+  --lang=node \
+  --description-ja="プロジェクトの短い説明"
 
 # Supported languages: node, go, swift, shell, python
 ```
@@ -156,7 +159,9 @@ After applying templates, review and customize:
   - [ ] Test execution commands
   - [ ] Coverage requirements
 - [ ] **CODE_OF_CONDUCT.md**
-  - [ ] Contact information (currently: X [@3chhe](https://x.com/3chhe))
+  - [ ] Contact information
+- [ ] **SECURITY.md**
+  - [ ] Security contact handle and email
 - [ ] **.github templates**
   - [ ] Issue labels (if different from defaults)
   - [ ] PR checklist items

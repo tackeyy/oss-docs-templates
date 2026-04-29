@@ -13,7 +13,7 @@ body:
       label: Describe the bug
       description: A clear and concise description of what the bug is
       placeholder: |
-        When I run `zoomy create --start 2026-02-20T10:00:00 --duration 60`, I get an error...
+        When I run `{{PROJECT_NAME}} --help`, I get an error...
     validations:
       required: true
 
@@ -23,7 +23,7 @@ body:
       label: Steps to reproduce
       description: Steps to reproduce the behavior
       placeholder: |
-        1. Run `zoomy create --start 2026-02-20T10:00:00 --duration 60`
+        1. Run `{{PROJECT_NAME}} --help`
         2. Observe error message
         3. ...
     validations:
@@ -34,7 +34,7 @@ body:
     attributes:
       label: Expected behavior
       description: What you expected to happen
-      placeholder: Meeting should be created successfully
+      placeholder: The command should complete successfully
     validations:
       required: true
 
@@ -49,22 +49,22 @@ body:
       required: true
 
   - type: input
-    id: version
+    id: project_version
     attributes:
-      label: Zoomy version
-      description: Run `zoomy --version` or `npm list zoomy`
+      label: "{{PROJECT_NAME}} version"
+      description: Run `{{PROJECT_NAME}} --version` or check your installed package/version
       placeholder: "1.0.0"
     validations:
       required: true
 
   - type: input
-    id: node
+    id: runtime
     attributes:
-      label: Node.js version
-      description: Run `node --version`
-      placeholder: "v20.10.0"
+      label: Runtime or language version
+      description: e.g., `node --version`, `python --version`, `go version`, `swift --version`
+      placeholder: "Node.js v22.0.0 / Python 3.12 / Go 1.22"
     validations:
-      required: true
+      required: false
 
   - type: input
     id: os

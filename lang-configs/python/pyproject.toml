@@ -17,7 +17,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["{{REPO_NAME}}"]
+known-first-party = ["{{PACKAGE_IMPORT_NAME}}"]
 
 [tool.mypy]
 python_version = "3.9"
@@ -40,7 +40,7 @@ addopts = [
     "-ra",
     "--strict-markers",
     "--strict-config",
-    "--cov={{REPO_NAME}}",
+    "--cov={{PACKAGE_IMPORT_NAME}}",
     "--cov-report=term-missing:skip-covered",
 ]
 markers = [
