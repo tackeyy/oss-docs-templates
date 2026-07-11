@@ -1,6 +1,6 @@
 #!/bin/bash
 # OSS Documentation Templates - Apply Script
-# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
+# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
 
 set -e
 
@@ -17,6 +17,8 @@ PROJECT_NAME=""
 REPO_OWNER=""
 REPO_NAME=""
 LANGUAGE=""
+LICENSE_CHOICE=""
+COPYRIGHT_HOLDER=""
 CONTACT_HANDLE=""
 CONTACT_EMAIL=""
 PROJECT_DESCRIPTION_JA=""
@@ -25,6 +27,14 @@ for arg in "$@"; do
   case $arg in
     --lang=*)
       LANGUAGE="${arg#*=}"
+      shift
+      ;;
+    --license=*)
+      LICENSE_CHOICE="${arg#*=}"
+      shift
+      ;;
+    --copyright-holder=*)
+      COPYRIGHT_HOLDER="${arg#*=}"
       shift
       ;;
     --contact-handle=*)
@@ -69,6 +79,13 @@ if [ -n "$LANGUAGE" ] && [[ ! "$LANGUAGE" =~ ^(node|go|swift|shell|python)$ ]]; 
   exit 1
 fi
 
+# Validate license if specified
+if [ -n "$LICENSE_CHOICE" ] && [[ ! "$LICENSE_CHOICE" =~ ^(apache-2.0|mit)$ ]]; then
+  echo -e "${RED}Error: Unsupported license '$LICENSE_CHOICE'${NC}"
+  echo -e "${BLUE}Supported licenses: apache-2.0, mit${NC}"
+  exit 1
+fi
+
 # Expand tilde in target directory
 TARGET_DIR="${TARGET_DIR/#\~/$HOME}"
 
@@ -83,6 +100,8 @@ CONTACT_HANDLE="${CONTACT_HANDLE:-$REPO_OWNER}"
 CONTACT_EMAIL="${CONTACT_EMAIL:-security@example.com}"
 PROJECT_DESCRIPTION_JA="${PROJECT_DESCRIPTION_JA:-$PROJECT_NAME の説明をここに書いてください。}"
 PACKAGE_IMPORT_NAME="${REPO_NAME//-/_}"
+COPYRIGHT_HOLDER="${COPYRIGHT_HOLDER:-$REPO_OWNER}"
+YEAR="$(date +%Y)"
 
 replace_placeholders() {
   local file="$1"
@@ -93,6 +112,8 @@ replace_placeholders() {
   CONTACT_EMAIL="$CONTACT_EMAIL" \
   PROJECT_DESCRIPTION_JA="$PROJECT_DESCRIPTION_JA" \
   PACKAGE_IMPORT_NAME="$PACKAGE_IMPORT_NAME" \
+  COPYRIGHT_HOLDER="$COPYRIGHT_HOLDER" \
+  YEAR="$YEAR" \
     perl -0pi -e '
       s/\{\{PROJECT_NAME\}\}/$ENV{PROJECT_NAME}/g;
       s/\{\{REPO_OWNER\}\}/$ENV{REPO_OWNER}/g;
@@ -101,6 +122,8 @@ replace_placeholders() {
       s/\{\{CONTACT_EMAIL\}\}/$ENV{CONTACT_EMAIL}/g;
       s/\{\{PROJECT_DESCRIPTION_JA\}\}/$ENV{PROJECT_DESCRIPTION_JA}/g;
       s/\{\{PACKAGE_IMPORT_NAME\}\}/$ENV{PACKAGE_IMPORT_NAME}/g;
+      s/\{\{COPYRIGHT_HOLDER\}\}/$ENV{COPYRIGHT_HOLDER}/g;
+      s/\{\{YEAR\}\}/$ENV{YEAR}/g;
     ' "$file"
 }
 
@@ -155,6 +178,20 @@ if [ -f "$SCRIPT_DIR/base/.github/dependabot.yml.template" ]; then
   cp "$SCRIPT_DIR/base/.github/dependabot.yml.template" "$TARGET_DIR/.github/dependabot.yml"
   replace_placeholders "$TARGET_DIR/.github/dependabot.yml"
   echo "✓ .github/dependabot.yml template copied and customized"
+fi
+
+# Remove raw *.template artifacts that were copied by `cp -r base/.github`
+find "$TARGET_DIR/.github" -type f -name "*.template" -delete
+
+# Copy LICENSE (if --license specified)
+if [ -n "$LICENSE_CHOICE" ]; then
+  if [ -f "$TARGET_DIR/LICENSE" ]; then
+    echo -e "${YELLOW}⚠ LICENSE already exists, skipping (--license=$LICENSE_CHOICE ignored)${NC}"
+  elif [ -f "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" ]; then
+    cp "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" "$TARGET_DIR/LICENSE"
+    replace_placeholders "$TARGET_DIR/LICENSE"
+    echo "✓ LICENSE ($LICENSE_CHOICE) copied — copyright: $YEAR $COPYRIGHT_HOLDER"
+  fi
 fi
 
 # Copy language-specific templates if specified

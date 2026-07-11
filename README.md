@@ -50,6 +50,8 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 | **SECURITY.md** | Vulnerability reporting policy and response process | ⭐⭐ Medium |
 | **.changeset/README.md** | Changesets versioning guide | ⭐ Low |
 | **.github/dependabot.yml** | Automated dependency updates (npm + GitHub Actions, weekly) | ⭐ Low |
+| **.github/workflows/security.yml** | Secret scanning with gitleaks on every push/PR | ⭐ Low |
+| **LICENSE** (with `--license=apache-2.0\|mit`) | License file with year/holder auto-filled (`--copyright-holder` to override) | ⭐ Low |
 
 ### Language-Specific Templates (Optional)
 
