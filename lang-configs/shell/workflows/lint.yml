@@ -14,11 +14,14 @@ on:
       - master
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  shellcheck:
-    name: ShellCheck
+  quality:
+    name: Shell Quality
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -28,13 +31,6 @@ jobs:
           scandir: '.'
           severity: warning
 
-  shfmt:
-    name: Shell Format Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
       - name: Install shfmt
         run: |
           wget https://github.com/mvdan/sh/releases/download/v3.7.0/shfmt_v3.7.0_linux_amd64 -O /usr/local/bin/shfmt
@@ -42,13 +38,6 @@ jobs:
 
       - name: Run shfmt
         run: shfmt -d -i 2 .
-
-  bats:
-    name: Bats Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
 
       - name: Setup bats
         uses: mig4/setup-bats@v1

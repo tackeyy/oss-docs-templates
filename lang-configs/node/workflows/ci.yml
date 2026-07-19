@@ -12,11 +12,14 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  typecheck:
-    name: Type Check
+  quality:
+    name: Quality
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -32,67 +35,37 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
+      - name: Run Markdown lint
+        run: npm run lint:md
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Python for YAML lint
+        uses: actions/setup-python@v5
         with:
-          node-version: '22'
-          cache: 'npm'
+          python-version: '3.x'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install yamllint
+        run: pip install yamllint
 
-      - name: Run lint
-        run: npm run lint
+      - name: Run YAML lint
+        run: npm run lint:yaml
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
         with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+          scandir: '.'
+          severity: warning
 
       - name: Run tests
         run: npm test
 
-      - name: Upload coverage
+      - name: Build
+        run: npm run build
+
+      - name: Upload coverage on failure
         uses: actions/upload-artifact@v4
-        if: always()
+        if: failure()
         with:
           name: coverage
           path: coverage/
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [typecheck, lint, test]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+          if-no-files-found: ignore
+          retention-days: 1
