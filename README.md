@@ -179,7 +179,7 @@ After applying templates, review and customize:
 - ✅ Package manager: npm/yarn/pnpm
 - ✅ TypeScript: tsconfig.json for Node 22 + ESM + NodeNext (compatible with `@modelcontextprotocol/sdk`)
 - ✅ CI workflow: typecheck + lint + test + build (ci.yml)
-- ✅ Gated release job: changesets-based npm publish after CI succeeds (ci.yml)
+- ✅ Gated release job: changesets-based npm publish after CI succeeds and release configuration is present (ci.yml)
 
 ### Go
 - ✅ Linter: golangci-lint (includes errcheck, gosimple, govet, staticcheck, etc.)

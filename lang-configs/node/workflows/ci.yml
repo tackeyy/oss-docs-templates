@@ -16,6 +16,8 @@ jobs:
     name: Quality
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      release-configured: ${{ steps.release-config.outputs.configured }}
     concurrency:
       group: quality-${{ github.ref }}
       cancel-in-progress: true
@@ -30,6 +32,19 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Detect release configuration
+        id: release-config
+        shell: bash
+        run: |
+          if node -e '
+            const p = require("./package.json");
+            process.exit(p.scripts?.release ? 0 : 1);
+          ' && [ -f .changeset/config.json ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Type check
         run: npm run typecheck --if-present
@@ -71,7 +86,10 @@ jobs:
 
   release:
     name: Release
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.quality.outputs.release-configured == 'true'
     needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 30

@@ -5,7 +5,7 @@
 このテンプレートは、lint、型検査、テスト、build、coverage、secret scanを削らず、同じruntime setupの重複とjob単位の
 分数切り上げを減らす。新規生成時のPR workflowは、Node.jsで7 jobから1 job、Goで2 jobから1 job、ShellとSwiftで
 それぞれ複数jobから1 jobへ統合する。Pythonは対応4バージョンを維持しながら、lintと型検査をPython 3.9のmatrix実行へ
-統合する。Node.jsのreleaseは通常CIの成功後だけ実行する。
+統合する。Node.jsのreleaseは通常CIの成功後かつChangesets設定が揃った場合だけ実行する。
 
 ## 品質を維持する不変条件
 
@@ -30,7 +30,8 @@
 | 共通security | 1 job | 1 job | 全履歴に対するgitleaks |
 
 Node.jsのreleaseはCI workflow内のdownstream jobとし、`needs: quality`で失敗commitのpublishを防ぐ。release jobは通常CIと
-権限を分離し、新しいpushが来ても実行中のreleaseをキャンセルしない。
+権限を分離し、新しいpushが来ても実行中のreleaseをキャンセルしない。`package.json`の`release` scriptと
+`.changeset/config.json`が存在しない新規プロジェクトでは、release jobを起動しない。
 
 ## 実装済みの節約策
 
