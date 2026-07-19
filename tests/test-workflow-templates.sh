@@ -26,6 +26,12 @@ assert_not_exists() {
   [ ! -e "$file" ] || fail "$file should not exist"
 }
 
+assert_not_contains() {
+  local file="$1"
+  local pattern="$2"
+  ! grep -Fq -- "$pattern" "$file" || fail "$file unexpectedly contains: $pattern"
+}
+
 assert_job_count() {
   local file="$1"
   local expected="$2"
@@ -66,15 +72,20 @@ done
 
 node_ci="$TEST_ROOT/node/.github/workflows/ci.yml"
 assert_not_exists "$TEST_ROOT/node/.github/workflows/lint.yml"
-assert_job_count "$node_ci" 1
-assert_contains "$node_ci" "npm run typecheck"
+assert_not_exists "$TEST_ROOT/node/.github/workflows/release.yml"
+assert_job_count "$node_ci" 2
+assert_contains "$node_ci" "npm run typecheck --if-present"
 assert_contains "$node_ci" "npm run lint:md"
 assert_contains "$node_ci" "npm run lint:yaml"
 assert_contains "$node_ci" "ludeeus/action-shellcheck"
-assert_contains "$node_ci" "npm test"
-assert_contains "$node_ci" "npm run build"
+assert_contains "$node_ci" "npm run test --if-present"
+assert_contains "$node_ci" "npm run build --if-present"
 assert_contains "$node_ci" "if: failure()"
 assert_contains "$node_ci" "retention-days: 1"
+assert_contains "$node_ci" "needs: quality"
+assert_contains "$node_ci" "github.event_name == 'push'"
+assert_contains "$node_ci" "changesets/action@v1"
+test -f "$TEST_ROOT/node/package-lock.json" || fail "Node template must generate package-lock.json"
 
 go_lint="$TEST_ROOT/go/.github/workflows/lint.yml"
 assert_job_count "$go_lint" 1
@@ -109,5 +120,21 @@ dependabot="$TEST_ROOT/node/.github/dependabot.yml"
 assert_contains "$dependabot" "minor-and-patch"
 assert_contains "$dependabot" "github-actions"
 assert_contains "$dependabot" "default-days: 7"
+
+migration_target="$TEST_ROOT/node-migration"
+mkdir -p "$migration_target/.github/workflows"
+printf '%s\n' "legacy-ci" >"$migration_target/.github/workflows/ci.yml"
+printf '%s\n' "legacy-lint" >"$migration_target/.github/workflows/lint.yml"
+printf '%s\n' "legacy-release" >"$migration_target/.github/workflows/release.yml"
+bash "$SCRIPT_DIR/apply-templates.sh" \
+  "$migration_target" \
+  "test-node-migration" \
+  "test-owner" \
+  "test-node-migration" \
+  --lang=node \
+  --update-actions >/dev/null
+assert_not_contains "$migration_target/.github/workflows/ci.yml" "legacy-ci"
+assert_not_exists "$migration_target/.github/workflows/lint.yml"
+assert_not_exists "$migration_target/.github/workflows/release.yml"
 
 echo "All workflow template tests passed."
