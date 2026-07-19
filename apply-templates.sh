@@ -313,7 +313,7 @@ if [ -n "$LANGUAGE" ]; then
       echo "4. Run tests: npm test"
       echo "5. Review and customize CONTRIBUTING.md"
       echo "6. Review SECURITY.md contact information"
-      echo "7. Add NPM_TOKEN secret to GitHub repository settings (for release.yml)"
+      echo "7. Add NPM_TOKEN secret to GitHub repository settings (for the release job in ci.yml)"
       ;;
     go)
       echo "1. Install golangci-lint: https://golangci-lint.run/usage/install/"

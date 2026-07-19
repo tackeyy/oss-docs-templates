@@ -3,13 +3,14 @@
 ## エグゼクティブサマリー
 
 このテンプレートは、lint、型検査、テスト、build、coverage、secret scanを削らず、同じruntime setupの重複とjob単位の
-分数切り上げを減らす。新規生成時の通常workflowは、Node.jsで7 jobから1 job、Goで2 jobから1 job、ShellとSwiftで
+分数切り上げを減らす。新規生成時のPR workflowは、Node.jsで7 jobから1 job、Goで2 jobから1 job、ShellとSwiftで
 それぞれ複数jobから1 jobへ統合する。Pythonは対応4バージョンを維持しながら、lintと型検査をPython 3.9のmatrix実行へ
-統合する。
+統合する。Node.jsのreleaseは通常CIの成功後だけ実行する。
 
 ## 品質を維持する不変条件
 
 - 既存のlint、型検査、テスト、build、coverage、secret scanを残す
+- Node.jsのプロジェクト固有scriptは`package.json`に定義されている場合に必ず実行する
 - Pythonの対応バージョン3.9、3.10、3.11、3.12を全て検証する
 - Goのrace detectorを維持する
 - Swiftのcoverage生成を維持する
@@ -20,29 +21,33 @@
 
 | 言語 | 変更前 | 変更後 | 維持する検査 |
 |---|---:|---:|---|
-| Node.js | 7 job | 1 job | typecheck、Markdown、YAML、ShellCheck、test、build |
+| Node.js PR | 7 job | 1 job | typecheck、Markdown、YAML、ShellCheck、test、build |
+| Node.js main | 2 workflow | 1 workflow、2直列job | quality成功後のrelease |
 | Go | 2 job | 1 job | golangci-lint、race test、coverage |
 | Python | 6実行 | 4実行 | ruff、mypy、4バージョンのtest、coverage |
 | Shell | 3 job | 1 job | ShellCheck、shfmt、Bats |
 | Swift | 2 job | 1 job | SwiftLint、test、coverage |
 | 共通security | 1 job | 1 job | 全履歴に対するgitleaks |
 
-Node.jsのrelease workflowはpublish権限と中断安全性が異なるため、通常CIへ統合しない。
+Node.jsのreleaseはCI workflow内のdownstream jobとし、`needs: quality`で失敗commitのpublishを防ぐ。release jobは通常CIと
+権限を分離し、新しいpushが来ても実行中のreleaseをキャンセルしない。
 
 ## 実装済みの節約策
 
 ### setupとjobの統合
 
 - 同じruntimeを使う短い検査を1 jobへまとめる
-- Node.jsのcheckout、`setup-node`、`npm ci`を1回にする
+- Node.jsのPRではcheckout、`setup-node`、`npm ci`を1回にする
 - Goのcheckoutと`setup-go`を1回にする
 - ShellとSwiftのcheckoutを1回にする
-- 全workflowで古いrunを`concurrency`によりキャンセルする
+- 品質検査では古いrunを`concurrency`によりキャンセルする
+- releaseは直列化し、実行中のpublishをキャンセルしない
 - 全jobに`timeout-minutes`を設定する
 
 ### cacheとartifact
 
 - npm、pip、Go moduleの公式`setup-*` cacheを使う
+- Node.jsの新規生成物には`npm ci`で使うlockfileを含める
 - Swift Package Managerの`.build`をXcode 15単位でcacheする
 - Python coverageは代表バージョンの3.9からだけ送信する
 - Node.js coverage artifactは失敗時だけ1日保持する
@@ -56,7 +61,7 @@ Node.jsのrelease workflowはpublish権限と中断安全性が異なるため�
 
 ### token権限
 
-通常CIは`contents: read`だけを付与する。release workflowだけはpublishに必要な書き込み権限を維持する。
+通常CIは`contents: read`だけを付与する。release jobだけはpublishに必要な書き込み権限を維持する。
 
 ## 共通テンプレートへ入れていない施策
 
@@ -82,7 +87,15 @@ Node.jsのrelease workflowはpublish権限と中断安全性が異なるため�
 - Swift: `Lint / Swift Quality`
 - 全言語: `Security / Secret Scan (gitleaks)`
 
-テンプレートは既存リポジトリの古いworkflowを自動削除しない。既存リポジトリへ再適用する場合は、required check名を更新してから旧workflowを手動で削除する。
+既存リポジトリのworkflowは、通常の再適用では上書きしない。旧テンプレートから移行する場合だけ、次を実行する。
+
+```bash
+bash apply-templates.sh <target> <project> <owner> <repo> --lang=node --update-actions
+```
+
+このオプションは旧`lint.yml`と`release.yml`を`.disabled`へ退避し、既存`ci.yml`を
+`ci.yml.pre-cost-optimization`へバックアップしてから置き換える。required checkを`CI / Quality`へ更新したことを確認後、
+バックアップを削除する。
 
 ## 公式仕様
 

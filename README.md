@@ -57,7 +57,7 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 
 | Language | Files Included | Linter/Formatter |
 |----------|----------------|------------------|
-| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, tsconfig.json, vitest.config.ts, .markdownlint.json, .yamllint.yml, .github/workflows/ci.yml, .github/workflows/release.yml | markdownlint, yamllint, shellcheck, TypeScript, Vitest, changesets |
+| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, package-lock.json, tsconfig.json, vitest.config.ts, .markdownlint.json, .yamllint.yml, .github/workflows/ci.yml | markdownlint, yamllint, shellcheck, TypeScript, Vitest, changesets |
 | **Go** | CONTRIBUTING.md, TESTING.md, .golangci.yml | golangci-lint |
 | **Swift** | CONTRIBUTING.md, TESTING.md, .swiftlint.yml | SwiftLint |
 | **Shell** | CONTRIBUTING.md, TESTING.md, .shellcheckrc | shellcheck, shfmt, bats |
@@ -91,7 +91,7 @@ bash ~/templates/oss-docs/apply-templates.sh \
   ~/dev/my-cli my-cli tackeyy my-cli --lang=node
 
 cd ~/dev/my-cli
-npm install
+npm ci
 npm run lint
 ```
 
@@ -179,7 +179,7 @@ After applying templates, review and customize:
 - ✅ Package manager: npm/yarn/pnpm
 - ✅ TypeScript: tsconfig.json for Node 22 + ESM + NodeNext (compatible with `@modelcontextprotocol/sdk`)
 - ✅ CI workflow: typecheck + lint + test + build (ci.yml)
-- ✅ Release workflow: changesets-based npm publish (release.yml)
+- ✅ Gated release job: changesets-based npm publish after CI succeeds (ci.yml)
 
 ### Go
 - ✅ Linter: golangci-lint (includes errcheck, gosimple, govet, staticcheck, etc.)
