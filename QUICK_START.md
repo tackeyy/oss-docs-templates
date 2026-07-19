@@ -61,6 +61,9 @@ bash ~/dev/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-pyth
 
 `--lang=node|go|swift|shell|python` を指定すると、言語別の `CONTRIBUTING.md`、`docs/TESTING.md`、lint 設定、GitHub Actions workflow が適用されます。
 
+旧Node workflowをコスト最適化版へ更新する場合だけ`--update-actions`を追加します。旧workflowは`.disabled`または
+`.pre-cost-optimization`へ退避されます。
+
 ## ⚙️ カスタマイズ必須箇所
 
 最低限、以下を確認・変更してください:

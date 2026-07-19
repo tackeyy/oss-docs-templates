@@ -1,9 +1,5 @@
 name: CI
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 on:
   push:
     branches:
@@ -12,87 +8,118 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  typecheck:
-    name: Type Check
+  quality:
+    name: Quality
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    outputs:
+      release-configured: ${{ steps.release-config.outputs.configured }}
+    concurrency:
+      group: quality-${{ github.ref }}
+      cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Detect release configuration
+        id: release-config
+        shell: bash
+        run: |
+          if node -e '
+            const p = require("./package.json");
+            process.exit(p.scripts?.release ? 0 : 1);
+          ' && [ -f .changeset/config.json ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Type check
-        run: npm run typecheck
+        run: npm run typecheck --if-present
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
+      - name: Run Markdown lint
+        run: npm run lint:md
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Python for YAML lint
+        uses: actions/setup-python@v6
         with:
-          node-version: '22'
-          cache: 'npm'
+          python-version: '3.x'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install yamllint
+        run: pip install yamllint
 
-      - name: Run lint
-        run: npm run lint
+      - name: Run YAML lint
+        run: npm run lint:yaml
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
         with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+          scandir: '.'
+          severity: warning
 
       - name: Run tests
-        run: npm test
+        run: npm run test --if-present
 
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Upload coverage on failure
+        uses: actions/upload-artifact@v7
+        if: failure()
         with:
           name: coverage
           path: coverage/
+          if-no-files-found: ignore
+          retention-days: 1
 
-  build:
-    name: Build
+  release:
+    name: Release
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.quality.outputs.release-configured == 'true'
+    needs: quality
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [typecheck, lint, test]
+    timeout-minutes: 30
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: npm run release
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

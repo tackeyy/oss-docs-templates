@@ -14,26 +14,22 @@ on:
       - master
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  shellcheck:
-    name: ShellCheck
+  quality:
+    name: Shell Quality
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
         with:
           scandir: '.'
           severity: warning
-
-  shfmt:
-    name: Shell Format Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
 
       - name: Install shfmt
         run: |
@@ -42,13 +38,6 @@ jobs:
 
       - name: Run shfmt
         run: shfmt -d -i 2 .
-
-  bats:
-    name: Bats Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
 
       - name: Setup bats
         uses: mig4/setup-bats@v1

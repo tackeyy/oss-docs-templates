@@ -57,7 +57,7 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 
 | Language | Files Included | Linter/Formatter |
 |----------|----------------|------------------|
-| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, tsconfig.json, vitest.config.ts, .markdownlint.json, .yamllint.yml, .github/workflows/ci.yml, .github/workflows/release.yml | markdownlint, yamllint, shellcheck, TypeScript, Vitest, changesets |
+| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, package-lock.json, tsconfig.json, vitest.config.ts, .markdownlint.json, .yamllint.yml, .github/workflows/ci.yml | markdownlint, yamllint, shellcheck, TypeScript, Vitest, changesets |
 | **Go** | CONTRIBUTING.md, TESTING.md, .golangci.yml | golangci-lint |
 | **Swift** | CONTRIBUTING.md, TESTING.md, .swiftlint.yml | SwiftLint |
 | **Shell** | CONTRIBUTING.md, TESTING.md, .shellcheckrc | shellcheck, shfmt, bats |
@@ -70,6 +70,7 @@ All language configs include GitHub Actions workflow for automated linting on PR
 - **[QUICK_START.md](QUICK_START.md)** - Get started in 3 steps
 - **[USAGE_EXAMPLES.md](USAGE_EXAMPLES.md)** - Project-specific examples and troubleshooting
 - **[CONTRIBUTING_GUIDE_PROPOSAL.md](CONTRIBUTING_GUIDE_PROPOSAL.md)** - Research-based best practices reference
+- **[GitHub Actions cost controls](docs/GITHUB_ACTIONS_COST_OPTIMIZATION.md)** - Quality-preserving CI optimization policy
 
 ## ✨ Features
 
@@ -77,6 +78,7 @@ All language configs include GitHub Actions workflow for automated linting on PR
 - **Language-specific configs** - Tailored CONTRIBUTING.md and lint setup for 5 languages
 - **Automatic customization** - Project name and repository auto-replacement
 - **GitHub Actions ready** - Automated lint checks on every PR
+- **Cost-efficient CI** - Consolidated jobs, dependency caching, short-lived failure artifacts, and grouped dependency updates
 - **Industry standards** - Based on GitHub CLI, AWS CLI, Contributor Covenant
 - **Privacy-conscious** - Contact via X (Twitter) [@3chhe](https://x.com/3chhe) instead of email
 
@@ -89,7 +91,7 @@ bash ~/templates/oss-docs/apply-templates.sh \
   ~/dev/my-cli my-cli tackeyy my-cli --lang=node
 
 cd ~/dev/my-cli
-npm install
+npm ci
 npm run lint
 ```
 
@@ -167,6 +169,7 @@ After applying templates, review and customize:
 - [ ] **.github templates**
   - [ ] Issue labels (if different from defaults)
   - [ ] PR checklist items
+  - [ ] Required checks match the generated workflow job names
 
 ## 🌍 Language Support Details
 
@@ -174,9 +177,10 @@ After applying templates, review and customize:
 - ✅ Linters: markdownlint, yamllint, shellcheck, eslint (optional)
 - ✅ Test framework: Jest/Vitest (vitest.config.ts included)
 - ✅ Package manager: npm/yarn/pnpm
-- ✅ TypeScript: tsconfig.json for Node 22 + ESM + NodeNext (compatible with `@modelcontextprotocol/sdk`)
+- ✅ Runtime: Node.js 24 LTS + npm 11
+- ✅ TypeScript: tsconfig.json for Node 24 + ESM + NodeNext (compatible with `@modelcontextprotocol/sdk`)
 - ✅ CI workflow: typecheck + lint + test + build (ci.yml)
-- ✅ Release workflow: changesets-based npm publish (release.yml)
+- ✅ Gated release job: changesets-based npm publish after CI succeeds and release configuration is present (ci.yml)
 
 ### Go
 - ✅ Linter: golangci-lint (includes errcheck, gosimple, govet, staticcheck, etc.)

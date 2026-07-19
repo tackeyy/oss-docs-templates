@@ -14,19 +14,22 @@ on:
       - main
       - master
 
+permissions:
+  contents: read
+
 jobs:
   gitleaks:
     name: Secret Scan (gitleaks)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # gitleaks scans commit history; full clone required
           fetch-depth: 0
 
       - name: Run gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Note: free for personal accounts. Organization repos require

@@ -14,26 +14,30 @@ on:
       - master
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  swiftlint:
-    name: SwiftLint
+  quality:
+    name: Swift Quality
     runs-on: macos-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-
-      - name: SwiftLint
-        uses: norio-nomura/action-swiftlint@3.2.1
-
-  test:
-    name: Test
-    runs-on: macos-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.0.app
+
+      - name: Cache Swift build
+        uses: actions/cache@v6
+        with:
+          path: .build
+          key: ${{ runner.os }}-xcode-15-spm-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-15-spm-
+
+      - name: SwiftLint
+        uses: norio-nomura/action-swiftlint@3.2.1
 
       - name: Build and Test
         run: swift test --enable-code-coverage

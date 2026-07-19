@@ -6,7 +6,9 @@
   "scripts": {
     "lint": "npm run lint:md && npm run lint:sh",
     "lint:md": "markdownlint-cli2 '**/*.md' '!node_modules/**' '!CONTRIBUTING_GUIDE_PROPOSAL.md'",
-    "lint:sh": "shellcheck apply-templates.sh"
+    "lint:sh": "shellcheck apply-templates.sh tests/*.sh",
+    "test": "npm run test:templates",
+    "test:templates": "bash tests/test-workflow-templates.sh"
   },
   "devDependencies": {
     "markdownlint-cli2": "^0.12.1"
