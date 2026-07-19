@@ -70,6 +70,7 @@ All language configs include GitHub Actions workflow for automated linting on PR
 - **[QUICK_START.md](QUICK_START.md)** - Get started in 3 steps
 - **[USAGE_EXAMPLES.md](USAGE_EXAMPLES.md)** - Project-specific examples and troubleshooting
 - **[CONTRIBUTING_GUIDE_PROPOSAL.md](CONTRIBUTING_GUIDE_PROPOSAL.md)** - Research-based best practices reference
+- **[GitHub Actions cost controls](docs/GITHUB_ACTIONS_COST_OPTIMIZATION.md)** - Quality-preserving CI optimization policy
 
 ## ✨ Features
 
@@ -77,6 +78,7 @@ All language configs include GitHub Actions workflow for automated linting on PR
 - **Language-specific configs** - Tailored CONTRIBUTING.md and lint setup for 5 languages
 - **Automatic customization** - Project name and repository auto-replacement
 - **GitHub Actions ready** - Automated lint checks on every PR
+- **Cost-efficient CI** - Consolidated jobs, dependency caching, short-lived failure artifacts, and grouped dependency updates
 - **Industry standards** - Based on GitHub CLI, AWS CLI, Contributor Covenant
 - **Privacy-conscious** - Contact via X (Twitter) [@3chhe](https://x.com/3chhe) instead of email
 
@@ -167,6 +169,7 @@ After applying templates, review and customize:
 - [ ] **.github templates**
   - [ ] Issue labels (if different from defaults)
   - [ ] PR checklist items
+  - [ ] Required checks match the generated workflow job names
 
 ## 🌍 Language Support Details
 
