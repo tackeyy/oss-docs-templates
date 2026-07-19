@@ -177,7 +177,8 @@ After applying templates, review and customize:
 - ✅ Linters: markdownlint, yamllint, shellcheck, eslint (optional)
 - ✅ Test framework: Jest/Vitest (vitest.config.ts included)
 - ✅ Package manager: npm/yarn/pnpm
-- ✅ TypeScript: tsconfig.json for Node 22 + ESM + NodeNext (compatible with `@modelcontextprotocol/sdk`)
+- ✅ Runtime: Node.js 24 LTS + npm 11
+- ✅ TypeScript: tsconfig.json for Node 24 + ESM + NodeNext (compatible with `@modelcontextprotocol/sdk`)
 - ✅ CI workflow: typecheck + lint + test + build (ci.yml)
 - ✅ Gated release job: changesets-based npm publish after CI succeeds and release configuration is present (ci.yml)
 

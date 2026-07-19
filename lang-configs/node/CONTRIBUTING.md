@@ -41,7 +41,7 @@ you're fixing a bug, adding a feature, improving tests, or improving documentati
 
 ### Prerequisites
 
-- Node.js 22+ / npm 10+
+- Node.js 24+ / npm 11+
 - Git
 
 ### Setup Steps

@@ -243,9 +243,9 @@ if [ -n "$LANGUAGE" ]; then
       fi
       [ -f "$LANG_DIR/.markdownlint.json" ] && cp "$LANG_DIR/.markdownlint.json" "$TARGET_DIR/" && echo "✓ .markdownlint.json copied"
       [ -f "$LANG_DIR/.yamllint.yml" ] && cp "$LANG_DIR/.yamllint.yml" "$TARGET_DIR/" && echo "✓ .yamllint.yml copied"
-      # Node 22 + TypeScript ESM configs (MCP SDK compatible)
+      # Node 24 + TypeScript ESM configs (MCP SDK compatible)
       if [ -f "$LANG_DIR/tsconfig.json" ]; then
-        [ ! -f "$TARGET_DIR/tsconfig.json" ] && cp "$LANG_DIR/tsconfig.json" "$TARGET_DIR/" && echo "✓ tsconfig.json copied (Node 22 + ESM + NodeNext)"
+        [ ! -f "$TARGET_DIR/tsconfig.json" ] && cp "$LANG_DIR/tsconfig.json" "$TARGET_DIR/" && echo "✓ tsconfig.json copied (Node 24 + ESM + NodeNext)"
       fi
       if [ -f "$LANG_DIR/vitest.config.ts" ]; then
         [ ! -f "$TARGET_DIR/vitest.config.ts" ] && cp "$LANG_DIR/vitest.config.ts" "$TARGET_DIR/" && echo "✓ vitest.config.ts copied"

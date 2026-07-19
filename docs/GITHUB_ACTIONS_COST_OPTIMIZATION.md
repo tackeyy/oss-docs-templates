@@ -5,7 +5,7 @@
 このテンプレートは、lint、型検査、テスト、build、coverage、secret scanを削らず、同じruntime setupの重複とjob単位の
 分数切り上げを減らす。新規生成時のPR workflowは、Node.jsで7 jobから1 job、Goで2 jobから1 job、ShellとSwiftで
 それぞれ複数jobから1 jobへ統合する。Pythonは対応4バージョンを維持しながら、lintと型検査をPython 3.9のmatrix実行へ
-統合する。Node.jsのreleaseは通常CIの成功後かつChangesets設定が揃った場合だけ実行する。
+統合する。Node.jsは24 LTSを基準とし、releaseは通常CIの成功後かつChangesets設定が揃った場合だけ実行する。
 
 ## 品質を維持する不変条件
 
@@ -49,6 +49,7 @@ Node.jsのreleaseはCI workflow内のdownstream jobとし、`needs: quality`で�
 
 - npm、pip、Go moduleの公式`setup-*` cacheを使う
 - Node.jsの新規生成物には`npm ci`で使うlockfileを含める
+- Node.js runtimeを24 LTSへ統一し、公式`actions/*`をNode 24対応majorへ更新する
 - Swift Package Managerの`.build`をXcode 15単位でcacheする
 - Python coverageは代表バージョンの3.9からだけ送信する
 - Node.js coverage artifactは失敗時だけ1日保持する
@@ -105,3 +106,4 @@ bash apply-templates.sh <target> <project> <owner> <repo> --lang=node --update-a
 - [Dependency caching](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching)
 - [Dependabot options reference](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference)
 - [Protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
+- [Node.js releases](https://nodejs.org/en/about/previous-releases)

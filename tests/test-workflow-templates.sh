@@ -130,7 +130,6 @@ assert_contains "$swift_lint" "actions/checkout@v6"
 assert_contains "$swift_lint" "actions/cache@v6"
 assert_contains "$swift_lint" "norio-nomura/action-swiftlint"
 assert_contains "$swift_lint" "swift test --enable-code-coverage"
-assert_contains "$swift_lint" "actions/cache@v4"
 assert_contains "$swift_lint" "codecov/codecov-action"
 
 dependabot="$TEST_ROOT/node/.github/dependabot.yml"
