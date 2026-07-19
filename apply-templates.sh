@@ -1,6 +1,6 @@
 #!/bin/bash
 # OSS Documentation Templates - Apply Script
-# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
+# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--update-actions] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
 
 set -e
 
@@ -22,6 +22,7 @@ COPYRIGHT_HOLDER=""
 CONTACT_HANDLE=""
 CONTACT_EMAIL=""
 PROJECT_DESCRIPTION_JA=""
+UPDATE_ACTIONS=false
 
 for arg in "$@"; do
   case $arg in
@@ -49,6 +50,10 @@ for arg in "$@"; do
       PROJECT_DESCRIPTION_JA="${arg#*=}"
       shift
       ;;
+    --update-actions)
+      UPDATE_ACTIONS=true
+      shift
+      ;;
     *)
       if [ -z "$TARGET_DIR" ]; then
         TARGET_DIR="$arg"
@@ -66,7 +71,7 @@ done
 
 # Validate required arguments
 if [ -z "$TARGET_DIR" ] || [ -z "$PROJECT_NAME" ] || [ -z "$REPO_OWNER" ] || [ -z "$REPO_NAME" ]; then
-  echo -e "${RED}Usage: $0 <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]${NC}"
+  echo -e "${RED}Usage: $0 <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--update-actions] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]${NC}"
   echo -e "${YELLOW}Example: $0 ~/dev/my-project my-project owner repo --lang=node --contact-handle=owner --contact-email=security@example.com --description-ja='短い説明'${NC}"
   echo -e "${BLUE}Supported languages: node, go, swift, shell, python${NC}"
   exit 1
@@ -134,6 +139,9 @@ echo "Repository: $REPO_OWNER/$REPO_NAME"
 echo "Security contact: @$CONTACT_HANDLE / $CONTACT_EMAIL"
 if [ -n "$LANGUAGE" ]; then
   echo "Language: $LANGUAGE"
+fi
+if [ "$UPDATE_ACTIONS" = true ]; then
+  echo "GitHub Actions: update managed workflows"
 fi
 echo ""
 
@@ -218,10 +226,20 @@ if [ -n "$LANGUAGE" ]; then
   # Copy lint configuration files
   case $LANGUAGE in
     node)
-      if [ -f "$LANG_DIR/package.json" ]; then
+      if [ ! -f "$TARGET_DIR/package.json" ] && [ -f "$LANG_DIR/package.json" ]; then
         cp "$LANG_DIR/package.json" "$TARGET_DIR/"
         replace_placeholders "$TARGET_DIR/package.json"
         echo "✓ package.json copied and customized"
+        if [ -f "$LANG_DIR/package-lock.json.template" ]; then
+          cp "$LANG_DIR/package-lock.json.template" "$TARGET_DIR/package-lock.json"
+          replace_placeholders "$TARGET_DIR/package-lock.json"
+          echo "✓ package-lock.json copied and customized"
+        fi
+      elif [ -f "$TARGET_DIR/package.json" ]; then
+        echo "✓ Existing package.json preserved"
+        if [ ! -f "$TARGET_DIR/package-lock.json" ]; then
+          echo -e "${YELLOW}⚠ package-lock.json is required by ci.yml; run npm install and commit it${NC}"
+        fi
       fi
       [ -f "$LANG_DIR/.markdownlint.json" ] && cp "$LANG_DIR/.markdownlint.json" "$TARGET_DIR/" && echo "✓ .markdownlint.json copied"
       [ -f "$LANG_DIR/.yamllint.yml" ] && cp "$LANG_DIR/.yamllint.yml" "$TARGET_DIR/" && echo "✓ .yamllint.yml copied"
@@ -257,15 +275,27 @@ if [ -n "$LANGUAGE" ]; then
     cp "$LANG_DIR/workflows/lint.yml" "$TARGET_DIR/.github/workflows/lint.yml"
     replace_placeholders "$TARGET_DIR/.github/workflows/lint.yml"
     echo "✓ .github/workflows/lint.yml copied and customized"
+  elif [ "$LANGUAGE" = "node" ] && [ "$UPDATE_ACTIONS" = true ] && [ -f "$TARGET_DIR/.github/workflows/lint.yml" ]; then
+    mv "$TARGET_DIR/.github/workflows/lint.yml" "$TARGET_DIR/.github/workflows/lint.yml.disabled"
+    echo "✓ Legacy lint.yml disabled (backup: lint.yml.disabled)"
   fi
-  # Additional workflows: ci.yml (typecheck+lint+test+build) and release.yml (changesets)
+  # Additional workflows: ci.yml (quality checks and gated release)
   if [ -f "$LANG_DIR/workflows/ci.yml" ]; then
     mkdir -p "$TARGET_DIR/.github/workflows"
-    [ ! -f "$TARGET_DIR/.github/workflows/ci.yml" ] && cp "$LANG_DIR/workflows/ci.yml" "$TARGET_DIR/.github/workflows/ci.yml" && echo "✓ .github/workflows/ci.yml copied"
+    if [ "$UPDATE_ACTIONS" = true ] || [ ! -f "$TARGET_DIR/.github/workflows/ci.yml" ]; then
+      if [ "$UPDATE_ACTIONS" = true ] && [ -f "$TARGET_DIR/.github/workflows/ci.yml" ]; then
+        cp "$TARGET_DIR/.github/workflows/ci.yml" "$TARGET_DIR/.github/workflows/ci.yml.pre-cost-optimization"
+      fi
+      cp "$LANG_DIR/workflows/ci.yml" "$TARGET_DIR/.github/workflows/ci.yml"
+      echo "✓ .github/workflows/ci.yml copied"
+    fi
   fi
   if [ -f "$LANG_DIR/workflows/release.yml" ]; then
     mkdir -p "$TARGET_DIR/.github/workflows"
     [ ! -f "$TARGET_DIR/.github/workflows/release.yml" ] && cp "$LANG_DIR/workflows/release.yml" "$TARGET_DIR/.github/workflows/release.yml" && echo "✓ .github/workflows/release.yml copied (set NPM_TOKEN secret)"
+  elif [ "$LANGUAGE" = "node" ] && [ "$UPDATE_ACTIONS" = true ] && [ -f "$TARGET_DIR/.github/workflows/release.yml" ]; then
+    mv "$TARGET_DIR/.github/workflows/release.yml" "$TARGET_DIR/.github/workflows/release.yml.disabled"
+    echo "✓ Legacy release.yml disabled (release is gated by ci.yml; backup: release.yml.disabled)"
   fi
 fi
 
