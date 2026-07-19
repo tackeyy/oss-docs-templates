@@ -74,6 +74,12 @@ node_ci="$TEST_ROOT/node/.github/workflows/ci.yml"
 assert_not_exists "$TEST_ROOT/node/.github/workflows/lint.yml"
 assert_not_exists "$TEST_ROOT/node/.github/workflows/release.yml"
 assert_job_count "$node_ci" 2
+assert_contains "$node_ci" "actions/setup-node@v7"
+assert_contains "$node_ci" "node-version: '24'"
+assert_contains "$node_ci" "actions/upload-artifact@v7"
+assert_not_contains "$node_ci" "actions/checkout@v4"
+assert_not_contains "$node_ci" "actions/setup-node@v4"
+assert_not_contains "$node_ci" "actions/upload-artifact@v4"
 assert_contains "$node_ci" "npm run typecheck --if-present"
 assert_contains "$node_ci" "npm run lint:md"
 assert_contains "$node_ci" "npm run lint:yaml"
@@ -89,9 +95,12 @@ assert_contains "$node_ci" "github.event_name == 'push'"
 assert_contains "$node_ci" "needs.quality.outputs.release-configured == 'true'"
 assert_contains "$node_ci" "changesets/action@v1"
 test -f "$TEST_ROOT/node/package-lock.json" || fail "Node template must generate package-lock.json"
+assert_contains "$TEST_ROOT/node/package.json" '"node": ">=24"'
 
 go_lint="$TEST_ROOT/go/.github/workflows/lint.yml"
 assert_job_count "$go_lint" 1
+assert_contains "$go_lint" "actions/checkout@v6"
+assert_contains "$go_lint" "actions/setup-go@v6"
 assert_contains "$go_lint" "golangci/golangci-lint-action"
 assert_contains "$go_lint" "go test -race"
 assert_contains "$go_lint" "cache: true"
@@ -99,6 +108,8 @@ assert_contains "$go_lint" "codecov/codecov-action"
 
 python_lint="$TEST_ROOT/python/.github/workflows/lint.yml"
 assert_job_count "$python_lint" 1
+assert_contains "$python_lint" "actions/checkout@v6"
+assert_contains "$python_lint" "actions/setup-python@v6"
 assert_contains "$python_lint" "python-version: ['3.9', '3.10', '3.11', '3.12']"
 assert_contains "$python_lint" "ruff check ."
 assert_contains "$python_lint" "mypy ."
@@ -108,12 +119,15 @@ assert_contains "$python_lint" "matrix.python-version == '3.9'"
 
 shell_lint="$TEST_ROOT/shell/.github/workflows/lint.yml"
 assert_job_count "$shell_lint" 1
+assert_contains "$shell_lint" "actions/checkout@v6"
 assert_contains "$shell_lint" "ludeeus/action-shellcheck"
 assert_contains "$shell_lint" "shfmt -d -i 2 ."
 assert_contains "$shell_lint" "bats tests/"
 
 swift_lint="$TEST_ROOT/swift/.github/workflows/lint.yml"
 assert_job_count "$swift_lint" 1
+assert_contains "$swift_lint" "actions/checkout@v6"
+assert_contains "$swift_lint" "actions/cache@v6"
 assert_contains "$swift_lint" "norio-nomura/action-swiftlint"
 assert_contains "$swift_lint" "swift test --enable-code-coverage"
 assert_contains "$swift_lint" "actions/cache@v4"
