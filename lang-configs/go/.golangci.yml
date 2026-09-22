@@ -1,38 +1,44 @@
-version: 2
+version: "2"
 
 run:
-  timeout: 5m
-  tests: true
   modules-download-mode: readonly
+  tests: true
 
 linters:
+  # The v2 standard set already enables errcheck, govet, ineffassign, staticcheck,
+  # and unused. misspell and revive are enabled explicitly in addition to that set.
   enable:
-    - errcheck      # Check for unchecked errors
-    - govet         # Reports suspicious constructs
-    - ineffassign   # Detect ineffectual assignments
-    - staticcheck   # Advanced static analysis
-    - unused        # Check for unused code
     - misspell      # Find misspelled words
     - revive        # Drop-in replacement for golint
-
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-
-  govet:
-    enable-all: true
-
-  revive:
-    severity: warning
-    rules:
-      - name: exported
-      - name: indent-error-flow
-      - name: error-return
-      - name: error-strings
-      - name: error-naming
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    govet:
+      enable-all: true
+    revive:
+      severity: warning
+      rules:
+        - name: exported
+        - name: indent-error-flow
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 
 issues:
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
+
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

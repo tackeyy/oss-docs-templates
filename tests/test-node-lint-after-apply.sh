@@ -10,6 +10,7 @@
 # npm が無いときは npm ci / npm run lint / markdownlint を実行せず SKIP と出す。
 # yamllint が無いときは YAML lint を実行せず SKIP と出す。
 # どちらも、ツールが無いのに成功したことにはしない。
+# REQUIRE_TOOLS=1 のときは SKIP せず失敗する。未設定のときは SKIP して 0 で戻る。
 
 set -euo pipefail
 
@@ -82,6 +83,9 @@ if grep -q '  $' "$ja/CODE_OF_CONDUCT.md"; then
 fi
 
 if ! command -v npm >/dev/null 2>&1; then
+  if [ "${REQUIRE_TOOLS:-}" = "1" ]; then
+    fail "REQUIRE_TOOLS=1 but missing: npm"
+  fi
   echo "SKIP: npm is not installed; npm ci, npm run lint, and markdownlint were not run"
 else
   ci_and_lint "$target" "en"
@@ -89,6 +93,9 @@ else
 fi
 
 if ! command -v yamllint >/dev/null 2>&1; then
+  if [ "${REQUIRE_TOOLS:-}" = "1" ]; then
+    fail "REQUIRE_TOOLS=1 but missing: yamllint"
+  fi
   echo "SKIP: yamllint is not installed; YAML lint was not run"
 else
   if ! yaml_out="$(cd "$target" && yamllint . 2>&1)"; then
