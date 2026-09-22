@@ -242,6 +242,15 @@ if [ "$DRY_RUN" = true ]; then
 fi
 echo ""
 
+# 言語に依存する内容を持つ base のファイル。既存を保持すると、--lang の内容が入らない
+LANG_DEPENDENT_KEPT=()
+if [ -n "$LANGUAGE" ] && [ "$FORCE" != true ]; then
+  [ ! -e "$TARGET_DIR/.github/PULL_REQUEST_TEMPLATE.md" ] || LANG_DEPENDENT_KEPT+=(".github/PULL_REQUEST_TEMPLATE.md")
+  if [ -n "$PACKAGE_ECOSYSTEM" ] && [ -e "$TARGET_DIR/.github/dependabot.yml" ]; then
+    LANG_DEPENDENT_KEPT+=(".github/dependabot.yml")
+  fi
+fi
+
 # Copy base templates (language-independent)
 echo -e "${YELLOW}Copying base templates...${NC}"
 
@@ -267,6 +276,10 @@ fi
 if [ -n "$LICENSE_CHOICE" ] && [ -f "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" ]; then
   install_file "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" "$TARGET_DIR/LICENSE" --placeholders
 fi
+
+for kept in ${LANG_DEPENDENT_KEPT[@]+"${LANG_DEPENDENT_KEPT[@]}"}; do
+  echo -e "${YELLOW}⚠ $kept was kept, so it has no $LANGUAGE-specific content (test command / dependency updates). Re-run with --force or update it manually.${NC}"
+done
 
 # Copy language-specific templates if specified
 if [ -n "$LANGUAGE" ]; then
@@ -398,7 +411,8 @@ else
   echo "1. Review CODE_OF_CONDUCT.md and update contact information if needed"
   echo "2. Customize .github templates for your project"
   echo "3. To add language-specific templates, run with --lang=<language>"
-  echo "   Example: $0 $TARGET_DIR $PROJECT_NAME $REPO_OWNER $REPO_NAME --lang=node"
+  echo "   Existing files are kept, so add --force to also update .github/dependabot.yml and PULL_REQUEST_TEMPLATE.md"
+  echo "   Example: $0 $TARGET_DIR $PROJECT_NAME $REPO_OWNER $REPO_NAME --lang=node --force"
   echo "4. Customize README.ja.md with project-specific Japanese content"
   echo "5. Add language switcher to README.md: **English** | [日本語](README.ja.md)"
 fi

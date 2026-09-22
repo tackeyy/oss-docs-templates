@@ -48,8 +48,7 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 | **.github/ISSUE_TEMPLATE/** | Bug report, feature request, question templates | ⭐⭐ Medium |
 | **.github/PULL_REQUEST_TEMPLATE.md** | PR checklist and guidelines | ⭐⭐ Medium |
 | **SECURITY.md** | Vulnerability reporting policy and response process | ⭐⭐ Medium |
-| **.changeset/README.md** | Changesets versioning guide | ⭐ Low |
-| **.github/dependabot.yml** | Automated dependency updates (npm + GitHub Actions, weekly) | ⭐ Low |
+| **.github/dependabot.yml** | Weekly updates for GitHub Actions, plus the package ecosystem of `--lang` (npm, gomod, pip, swift) | ⭐ Low |
 | **.github/workflows/security.yml** | Secret scanning with gitleaks on every push/PR | ⭐ Low |
 | **LICENSE** (with `--license=apache-2.0\|mit`) | License file with year/holder auto-filled (`--copyright-holder` to override) | ⭐ Low |
 
@@ -57,7 +56,7 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 
 | Language | Files Included | Linter/Formatter |
 |----------|----------------|------------------|
-| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, package-lock.json, tsconfig.json, vitest.config.ts, .markdownlint.json, .yamllint.yml, .github/workflows/ci.yml | markdownlint, yamllint, shellcheck, TypeScript, Vitest, changesets |
+| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, package-lock.json, tsconfig.json, vitest.config.ts, .markdownlint.json, .yamllint.yml, .changeset/README.md, .github/workflows/ci.yml | markdownlint, yamllint, shellcheck, TypeScript, Vitest, changesets |
 | **Go** | CONTRIBUTING.md, TESTING.md, .golangci.yml | golangci-lint |
 | **Swift** | CONTRIBUTING.md, TESTING.md, .swiftlint.yml | SwiftLint |
 | **Shell** | CONTRIBUTING.md, TESTING.md, .shellcheckrc | shellcheck, shfmt, bats |

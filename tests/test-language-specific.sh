@@ -34,6 +34,7 @@ check_lang() {
   [ "$(ecosystems "$dir")" = "$expected" ] || fail "$lang: dependabot ecosystems are '$(ecosystems "$dir")', expected '$expected'"
   grep -Fq -- "$test_cmd" "$dir/.github/PULL_REQUEST_TEMPLATE.md" || fail "$lang: PR template must mention '$test_cmd'"
   ! grep -Eq '\{\{[A-Z_]+\}\}' "$dir/.github/PULL_REQUEST_TEMPLATE.md" || fail "$lang: PR template has an unreplaced placeholder"
+  ! grep -Eq '\{\{[A-Z_]+\}\}' "$dir/.github/dependabot.yml" || fail "$lang: dependabot.yml has an unreplaced placeholder"
   if [ "$lang" = node ]; then
     [ -f "$dir/.changeset/README.md" ] || fail "node: changeset README must be generated"
   else
@@ -59,5 +60,18 @@ dir="$(gen none)"
 node_dir="$TEST_ROOT/node"
 ! grep -Fq "release.yml" "$node_dir/.changeset/README.md" || fail "changeset README must not refer to a non-existent release.yml"
 grep -Fq "ci.yml" "$node_dir/.changeset/README.md" || fail "changeset README must point to the release job in ci.yml"
+
+# 言語なしで適用した後に --lang で再適用すると、言語に依存するファイルは保持される。
+# 黙って汎用の内容のまま残さず、どのファイルが言語別の内容になっていないかを警告する
+t="$TEST_ROOT/reapply"
+mkdir -p "$t"
+bash "$APPLY" "$t" p owner repo >/dev/null
+out="$(bash "$APPLY" "$t" p owner repo --lang=node 2>&1)"
+for f in .github/dependabot.yml .github/PULL_REQUEST_TEMPLATE.md; do
+  echo "$out" | grep -F "⚠" | grep -Fq "$f" || fail "re-applying with --lang must warn that $f was kept without node-specific content"
+done
+# --force で再適用すれば言語別の内容になる
+bash "$APPLY" "$t" p owner repo --lang=node --force >/dev/null
+[ "$(ecosystems "$t")" = "github-actions npm " ] || fail "--force re-apply must add the npm ecosystem"
 
 echo "All language-specific tests passed."

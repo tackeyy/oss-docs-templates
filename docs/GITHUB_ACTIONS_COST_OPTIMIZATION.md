@@ -56,7 +56,7 @@ Node.jsのreleaseはCI workflow内のdownstream jobとし、`needs: quality`で�
 
 ### Dependabot
 
-- npmのminor・patch更新を1 PRへまとめる
+- `--lang` のパッケージ ecosystem（npm・gomod・pip・swift）のminor・patch更新を1 PRへまとめる
 - GitHub Actions更新を1 PRへまとめる
 - 通常のversion updateへ7日のcooldownを設定する
 - security updateにはcooldownを適用しない
