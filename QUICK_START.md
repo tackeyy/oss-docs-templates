@@ -15,7 +15,8 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
   ~/dev/your-project \
   your-project-name \
   your-github-username \
-  your-repo-name
+  your-repo-name \
+  --conduct-contact=conduct@example.com
 ```
 
 ### ステップ3: カスタマイズ
@@ -41,7 +42,7 @@ vim docs/TESTING.md
 ```bash
 mkdir ~/dev/awesome-cli && cd ~/dev/awesome-cli
 npm init -y
-bash ~/dev/templates/oss-docs/apply-templates.sh . awesome-cli tackeyy awesome-cli
+bash ~/dev/templates/oss-docs/apply-templates.sh . awesome-cli tackeyy awesome-cli --conduct-contact=conduct@example.com
 ```
 
 ### 既存プロジェクト
@@ -49,14 +50,14 @@ bash ~/dev/templates/oss-docs/apply-templates.sh . awesome-cli tackeyy awesome-c
 ```bash
 cd ~/dev/existing-project
 git checkout -b add-contributing-docs
-bash ~/dev/templates/oss-docs/apply-templates.sh . existing-project your-username existing-project
+bash ~/dev/templates/oss-docs/apply-templates.sh . existing-project your-username existing-project --conduct-contact=conduct@example.com
 git diff  # 変更内容を確認
 ```
 
 ### Python プロジェクト
 
 ```bash
-bash ~/dev/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-python-app --lang=python
+bash ~/dev/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-python-app --lang=python --conduct-contact=conduct@example.com
 ```
 
 `--lang=node|go|swift|shell|python` を指定すると、言語別の `CONTRIBUTING.md`、`docs/TESTING.md`、lint 設定、GitHub Actions workflow が適用されます。

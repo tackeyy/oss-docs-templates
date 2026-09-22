@@ -18,7 +18,8 @@ bash ~/templates/oss-docs/apply-templates.sh \
   your-github-username \
   your-repo-name \
   --contact-handle=your-handle \
-  --contact-email=security@example.com
+  --contact-email=security@example.com \
+  --conduct-contact=conduct@example.com
 ```
 
 ### With Language-Specific Configuration
@@ -31,7 +32,8 @@ bash ~/templates/oss-docs/apply-templates.sh \
   your-github-username \
   your-repo-name \
   --lang=node \
-  --description-ja="プロジェクトの短い説明"
+  --description-ja="プロジェクトの短い説明" \
+  --conduct-contact=conduct@example.com
 
 # Supported languages: node, go, swift, shell, python
 ```
@@ -87,7 +89,8 @@ All language configs include GitHub Actions workflow for automated linting on PR
 
 ```bash
 bash ~/templates/oss-docs/apply-templates.sh \
-  ~/dev/my-cli my-cli tackeyy my-cli --lang=node
+  ~/dev/my-cli my-cli tackeyy my-cli --lang=node \
+  --conduct-contact=conduct@example.com
 
 cd ~/dev/my-cli
 npm ci
@@ -98,7 +101,8 @@ npm run lint
 
 ```bash
 bash ~/templates/oss-docs/apply-templates.sh \
-  ~/dev/my-go-app my-go-app tackeyy my-go-app --lang=go
+  ~/dev/my-go-app my-go-app tackeyy my-go-app --lang=go \
+  --conduct-contact=conduct@example.com
 
 cd ~/dev/my-go-app
 go mod download
@@ -109,7 +113,8 @@ golangci-lint run
 
 ```bash
 bash ~/templates/oss-docs/apply-templates.sh \
-  ~/dev/my-python-app my-python-app tackeyy my-python-app --lang=python
+  ~/dev/my-python-app my-python-app tackeyy my-python-app --lang=python \
+  --conduct-contact=conduct@example.com
 
 cd ~/dev/my-python-app
 pip install ruff mypy pytest
@@ -120,7 +125,8 @@ ruff check .
 
 ```bash
 bash ~/templates/oss-docs/apply-templates.sh \
-  ~/dev/my-swift-app my-swift-app tackeyy my-swift-app --lang=swift
+  ~/dev/my-swift-app my-swift-app tackeyy my-swift-app --lang=swift \
+  --conduct-contact=conduct@example.com
 
 cd ~/dev/my-swift-app
 swiftlint
@@ -130,7 +136,8 @@ swiftlint
 
 ```bash
 bash ~/templates/oss-docs/apply-templates.sh \
-  ~/dev/my-scripts my-scripts tackeyy my-scripts --lang=shell
+  ~/dev/my-scripts my-scripts tackeyy my-scripts --lang=shell \
+  --conduct-contact=conduct@example.com
 
 cd ~/dev/my-scripts
 shellcheck *.sh

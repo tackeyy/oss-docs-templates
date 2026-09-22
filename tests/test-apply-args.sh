@@ -43,7 +43,7 @@ done
 # 正しい指定は従来どおり通る
 ok="$TEST_ROOT/ok"
 mkdir -p "$ok"
-bash "$APPLY" "$ok" p owner repo --license=mit >/dev/null || fail "valid invocation must succeed"
+bash "$APPLY" "$ok" p owner repo --license=mit --conduct-contact=conduct@example.org >/dev/null || fail "valid invocation must succeed"
 [ -f "$ok/LICENSE" ] || fail "valid --license must create LICENSE"
 
 # 未定義変数とパイプ途中の失敗を検出する設定になっている

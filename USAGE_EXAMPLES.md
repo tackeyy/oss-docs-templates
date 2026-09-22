@@ -15,7 +15,8 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
   awesome-cli \
   tackeyy \
   awesome-cli \
-  --lang=node
+  --lang=node \
+  --conduct-contact=conduct@example.com
 ```
 
 **実行結果（抜粋）:**
@@ -45,7 +46,8 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
   ~/dev/existing-project \
   existing-project \
   your-username \
-  existing-project
+  existing-project \
+  --conduct-contact=conduct@example.com
 ```
 
 ## プロジェクトタイプ別のカスタマイズ
@@ -54,7 +56,7 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
 
 ```bash
 cd ~/dev/python-project
-bash ~/dev/templates/oss-docs/apply-templates.sh . python-project tackeyy python-project --lang=python
+bash ~/dev/templates/oss-docs/apply-templates.sh . python-project tackeyy python-project --lang=python --conduct-contact=conduct@example.com
 ```
 
 ### Go プロジェクト
@@ -62,14 +64,14 @@ bash ~/dev/templates/oss-docs/apply-templates.sh . python-project tackeyy python
 ```bash
 cd ~/dev/go-project
 
-bash ~/dev/templates/oss-docs/apply-templates.sh . go-project tackeyy go-project --lang=go
+bash ~/dev/templates/oss-docs/apply-templates.sh . go-project tackeyy go-project --lang=go --conduct-contact=conduct@example.com
 ```
 
 ### Shell プロジェクト
 
 ```bash
 cd ~/dev/shell-project
-bash ~/dev/templates/oss-docs/apply-templates.sh . shell-project tackeyy shell-project --lang=shell
+bash ~/dev/templates/oss-docs/apply-templates.sh . shell-project tackeyy shell-project --lang=shell --conduct-contact=conduct@example.com
 ```
 
 ## 高度な使い方
@@ -89,7 +91,7 @@ PROJECTS=(
 for project in "${PROJECTS[@]}"; do
   IFS=':' read -r dir name owner repo <<< "$project"
   echo "Applying to $name..."
-  bash ~/dev/templates/oss-docs/apply-templates.sh "$dir" "$name" "$owner" "$repo"
+  bash ~/dev/templates/oss-docs/apply-templates.sh "$dir" "$name" "$owner" "$repo" --conduct-contact=conduct@example.com
   echo ""
 done
 ```
@@ -115,7 +117,7 @@ cd ~/dev/templates/oss-docs-python
 ```bash
 # ディレクトリを作成してから実行
 mkdir -p ~/dev/new-project
-bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/new-project new-project owner repo
+bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/new-project new-project owner repo --conduct-contact=conduct@example.com
 ```
 
 ### エラー: "Permission denied"

@@ -18,6 +18,7 @@ Options:
   --lang=<node|go|swift|shell|python>   Add language-specific templates
   --license=<apache-2.0|mit>            Create LICENSE
   --copyright-holder=<name>             Copyright holder for LICENSE (default: repo owner)
+  --conduct-contact=<email-or-url>      Where Code of Conduct reports go (required when CODE_OF_CONDUCT.md is written)
   --contact-handle=<handle>             Security contact handle (default: repo owner)
   --contact-email=<email>               Security contact email
   --description-ja=<text>               Short Japanese description for README.ja.md
@@ -40,6 +41,7 @@ COPYRIGHT_HOLDER=""
 CONTACT_HANDLE=""
 CONTACT_EMAIL=""
 PROJECT_DESCRIPTION_JA=""
+CONDUCT_CONTACT=""
 UPDATE_ACTIONS=false
 FORCE=false
 DRY_RUN=false
@@ -52,6 +54,7 @@ for arg in "$@"; do
     --contact-handle=*) CONTACT_HANDLE="${arg#*=}" ;;
     --contact-email=*) CONTACT_EMAIL="${arg#*=}" ;;
     --description-ja=*) PROJECT_DESCRIPTION_JA="${arg#*=}" ;;
+    --conduct-contact=*) CONDUCT_CONTACT="${arg#*=}" ;;
     --update-actions) UPDATE_ACTIONS=true ;;
     --force) FORCE=true ;;
     --dry-run) DRY_RUN=true ;;
@@ -109,6 +112,13 @@ if [ ! -d "$TARGET_DIR" ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 行動規範の報告先は既定値を持たない。既定値があると、指定し忘れたまま誤った宛先が公開される。
+if [ -z "$CONDUCT_CONTACT" ] && { [ ! -e "$TARGET_DIR/CODE_OF_CONDUCT.md" ] || [ "$FORCE" = true ]; }; then
+  echo -e "${RED}Error: --conduct-contact is required to write CODE_OF_CONDUCT.md${NC}" >&2
+  echo -e "${BLUE}Specify an email address or URL where Code of Conduct reports should go.${NC}" >&2
+  exit 1
+fi
 CONTACT_HANDLE="${CONTACT_HANDLE:-$REPO_OWNER}"
 CONTACT_EMAIL="${CONTACT_EMAIL:-security@example.com}"
 PROJECT_DESCRIPTION_JA="${PROJECT_DESCRIPTION_JA:-$PROJECT_NAME の説明をここに書いてください。}"
@@ -168,6 +178,7 @@ replace_placeholders() {
   PACKAGE_IMPORT_NAME="$PACKAGE_IMPORT_NAME" \
   COPYRIGHT_HOLDER="$COPYRIGHT_HOLDER" \
   YEAR="$YEAR" \
+  CONDUCT_CONTACT="$CONDUCT_CONTACT" \
   TEST_COMMAND="$TEST_COMMAND" \
   DEPENDABOT_PACKAGE_BLOCK="$DEPENDABOT_PACKAGE_BLOCK" \
     perl -0pi -e '
@@ -180,6 +191,7 @@ replace_placeholders() {
       s/\{\{PACKAGE_IMPORT_NAME\}\}/$ENV{PACKAGE_IMPORT_NAME}/g;
       s/\{\{COPYRIGHT_HOLDER\}\}/$ENV{COPYRIGHT_HOLDER}/g;
       s/\{\{YEAR\}\}/$ENV{YEAR}/g;
+      s/\{\{CONDUCT_CONTACT\}\}/$ENV{CONDUCT_CONTACT}/g;
       s/\{\{TEST_COMMAND\}\}/$ENV{TEST_COMMAND}/g;
       s/\n?\{\{DEPENDABOT_PACKAGE_BLOCK\}\}/$ENV{DEPENDABOT_PACKAGE_BLOCK}/g;
     ' "$file"
@@ -254,7 +266,7 @@ fi
 # Copy base templates (language-independent)
 echo -e "${YELLOW}Copying base templates...${NC}"
 
-install_file "$SCRIPT_DIR/base/CODE_OF_CONDUCT.md" "$TARGET_DIR/CODE_OF_CONDUCT.md"
+install_file "$SCRIPT_DIR/base/CODE_OF_CONDUCT.md" "$TARGET_DIR/CODE_OF_CONDUCT.md" --placeholders
 
 # .github templates (raw *.template files are rendered separately below)
 while IFS= read -r template_file; do
@@ -412,7 +424,7 @@ else
   echo "2. Customize .github templates for your project"
   echo "3. To add language-specific templates, run with --lang=<language>"
   echo "   Existing files are kept, so add --force to also update .github/dependabot.yml and PULL_REQUEST_TEMPLATE.md"
-  echo "   Example: $0 $TARGET_DIR $PROJECT_NAME $REPO_OWNER $REPO_NAME --lang=node --force"
+  echo "   Example: $0 $TARGET_DIR $PROJECT_NAME $REPO_OWNER $REPO_NAME --lang=node --force --conduct-contact=$CONDUCT_CONTACT"
   echo "4. Customize README.ja.md with project-specific Japanese content"
   echo "5. Add language switcher to README.md: **English** | [日本語](README.ja.md)"
 fi

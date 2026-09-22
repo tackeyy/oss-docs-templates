@@ -59,7 +59,8 @@ generate_templates() {
     "test-$language" \
     "test-owner" \
     "test-$language" \
-    "--lang=$language" >/dev/null
+    "--lang=$language" \
+    --conduct-contact=conduct@example.org >/dev/null
 }
 
 for language in node go python shell swift; do
@@ -148,6 +149,7 @@ bash "$SCRIPT_DIR/apply-templates.sh" \
   "test-owner" \
   "test-node-migration" \
   --lang=node \
+  --conduct-contact=conduct@example.org \
   --update-actions >/dev/null
 assert_not_contains "$migration_target/.github/workflows/ci.yml" "legacy-ci"
 assert_not_exists "$migration_target/.github/workflows/lint.yml"
