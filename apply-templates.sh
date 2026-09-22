@@ -116,6 +116,47 @@ PACKAGE_IMPORT_NAME="${REPO_NAME//-/_}"
 COPYRIGHT_HOLDER="${COPYRIGHT_HOLDER:-$REPO_OWNER}"
 YEAR="$(date +%Y)"
 
+# 言語ごとの値。base のテンプレートは言語に依存しないよう、これらを置換変数で受ける。
+# バッククォートは Markdown のコード表記として文字どおり出力する
+# shellcheck disable=SC2016
+case "$LANGUAGE" in
+  node) TEST_COMMAND='`npm test`'; PACKAGE_ECOSYSTEM="npm" ;;
+  go) TEST_COMMAND='`go test ./...`'; PACKAGE_ECOSYSTEM="gomod" ;;
+  python) TEST_COMMAND='`pytest`'; PACKAGE_ECOSYSTEM="pip" ;;
+  swift) TEST_COMMAND='`swift test`'; PACKAGE_ECOSYSTEM="swift" ;;
+  shell) TEST_COMMAND='`bats tests/`'; PACKAGE_ECOSYSTEM="" ;;
+  *) TEST_COMMAND="the project's test command"; PACKAGE_ECOSYSTEM="" ;;
+esac
+
+DEPENDABOT_PACKAGE_BLOCK=""
+if [ -n "$PACKAGE_ECOSYSTEM" ]; then
+  DEPENDABOT_PACKAGE_BLOCK="
+  - package-ecosystem: \"$PACKAGE_ECOSYSTEM\"
+    directory: \"/\"
+    schedule:
+      interval: \"weekly\"
+      day: \"monday\"
+      time: \"09:00\"
+      timezone: \"Asia/Tokyo\"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      minor-and-patch:
+        patterns:
+          - \"*\"
+        update-types:
+          - \"minor\"
+          - \"patch\"
+    reviewers:
+      - \"$REPO_OWNER\"
+    labels:
+      - \"dependencies\"
+    commit-message:
+      prefix: \"chore\"
+      include: \"scope\""
+fi
+
 replace_placeholders() {
   local file="$1"
   PROJECT_NAME="$PROJECT_NAME" \
@@ -127,6 +168,8 @@ replace_placeholders() {
   PACKAGE_IMPORT_NAME="$PACKAGE_IMPORT_NAME" \
   COPYRIGHT_HOLDER="$COPYRIGHT_HOLDER" \
   YEAR="$YEAR" \
+  TEST_COMMAND="$TEST_COMMAND" \
+  DEPENDABOT_PACKAGE_BLOCK="$DEPENDABOT_PACKAGE_BLOCK" \
     perl -0pi -e '
       s/\{\{PROJECT_NAME\}\}/$ENV{PROJECT_NAME}/g;
       s/\{\{REPO_OWNER\}\}/$ENV{REPO_OWNER}/g;
@@ -137,6 +180,8 @@ replace_placeholders() {
       s/\{\{PACKAGE_IMPORT_NAME\}\}/$ENV{PACKAGE_IMPORT_NAME}/g;
       s/\{\{COPYRIGHT_HOLDER\}\}/$ENV{COPYRIGHT_HOLDER}/g;
       s/\{\{YEAR\}\}/$ENV{YEAR}/g;
+      s/\{\{TEST_COMMAND\}\}/$ENV{TEST_COMMAND}/g;
+      s/\n?\{\{DEPENDABOT_PACKAGE_BLOCK\}\}/$ENV{DEPENDABOT_PACKAGE_BLOCK}/g;
     ' "$file"
 }
 
@@ -197,6 +242,15 @@ if [ "$DRY_RUN" = true ]; then
 fi
 echo ""
 
+# 言語に依存する内容を持つ base のファイル。既存を保持すると、--lang の内容が入らない
+LANG_DEPENDENT_KEPT=()
+if [ -n "$LANGUAGE" ] && [ "$FORCE" != true ]; then
+  [ ! -e "$TARGET_DIR/.github/PULL_REQUEST_TEMPLATE.md" ] || LANG_DEPENDENT_KEPT+=(".github/PULL_REQUEST_TEMPLATE.md")
+  if [ -n "$PACKAGE_ECOSYSTEM" ] && [ -e "$TARGET_DIR/.github/dependabot.yml" ]; then
+    LANG_DEPENDENT_KEPT+=(".github/dependabot.yml")
+  fi
+fi
+
 # Copy base templates (language-independent)
 echo -e "${YELLOW}Copying base templates...${NC}"
 
@@ -215,10 +269,6 @@ if [ -f "$SCRIPT_DIR/base/SECURITY.md.template" ]; then
   install_file "$SCRIPT_DIR/base/SECURITY.md.template" "$TARGET_DIR/SECURITY.md" --placeholders
 fi
 
-if [ -f "$SCRIPT_DIR/base/.changeset/README.md.template" ]; then
-  install_file "$SCRIPT_DIR/base/.changeset/README.md.template" "$TARGET_DIR/.changeset/README.md"
-fi
-
 if [ -f "$SCRIPT_DIR/base/.github/dependabot.yml.template" ]; then
   install_file "$SCRIPT_DIR/base/.github/dependabot.yml.template" "$TARGET_DIR/.github/dependabot.yml" --placeholders
 fi
@@ -226,6 +276,10 @@ fi
 if [ -n "$LICENSE_CHOICE" ] && [ -f "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" ]; then
   install_file "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" "$TARGET_DIR/LICENSE" --placeholders
 fi
+
+for kept in ${LANG_DEPENDENT_KEPT[@]+"${LANG_DEPENDENT_KEPT[@]}"}; do
+  echo -e "${YELLOW}⚠ $kept was kept, so it has no $LANGUAGE-specific content (test command / dependency updates). Re-run with --force or update it manually.${NC}"
+done
 
 # Copy language-specific templates if specified
 if [ -n "$LANGUAGE" ]; then
@@ -255,6 +309,9 @@ if [ -n "$LANGUAGE" ]; then
             echo -e "${YELLOW}⚠ package-lock.json is required by ci.yml; run npm install and commit it${NC}"
           fi
         fi
+      fi
+      if [ -f "$LANG_DIR/.changeset/README.md.template" ]; then
+        install_file "$LANG_DIR/.changeset/README.md.template" "$TARGET_DIR/.changeset/README.md"
       fi
       for config in .markdownlint.json .yamllint.yml tsconfig.json vitest.config.ts; do
         if [ -f "$LANG_DIR/$config" ]; then
@@ -354,7 +411,8 @@ else
   echo "1. Review CODE_OF_CONDUCT.md and update contact information if needed"
   echo "2. Customize .github templates for your project"
   echo "3. To add language-specific templates, run with --lang=<language>"
-  echo "   Example: $0 $TARGET_DIR $PROJECT_NAME $REPO_OWNER $REPO_NAME --lang=node"
+  echo "   Existing files are kept, so add --force to also update .github/dependabot.yml and PULL_REQUEST_TEMPLATE.md"
+  echo "   Example: $0 $TARGET_DIR $PROJECT_NAME $REPO_OWNER $REPO_NAME --lang=node --force"
   echo "4. Customize README.ja.md with project-specific Japanese content"
   echo "5. Add language switcher to README.md: **English** | [日本語](README.ja.md)"
 fi
