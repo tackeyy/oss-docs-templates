@@ -55,7 +55,7 @@ assert_original() {
 # 1) 既定: 既存ファイルは保持し、スキップを表示する
 t="$TEST_ROOT/default"
 seed "$t"
-out="$(bash "$APPLY" "$t" p owner repo --lang=python 2>&1)"
+out="$(bash "$APPLY" "$t" p owner repo --conduct-contact=conduct@example.org --lang=python 2>&1)"
 assert_original "$t"
 echo "$out" | grep -Fq "skip (exists): CONTRIBUTING.md" || fail "skipped files must be reported"
 [ -f "$t/.github/ISSUE_TEMPLATE/feature_request.yml" ] || fail "missing files must still be created"
@@ -64,7 +64,7 @@ echo "$out" | grep -Fq "skip (exists): CONTRIBUTING.md" || fail "skipped files m
 t="$TEST_ROOT/dry-existing"
 seed "$t"
 before="$(cd "$t" && find . -type f -exec shasum {} + | sort)"
-out="$(bash "$APPLY" "$t" p owner repo --lang=node --license=mit --dry-run 2>&1)"
+out="$(bash "$APPLY" "$t" p owner repo --conduct-contact=conduct@example.org --lang=node --license=mit --dry-run 2>&1)"
 after="$(cd "$t" && find . -type f -exec shasum {} + | sort)"
 [ "$before" = "$after" ] || fail "--dry-run must not change any file"
 echo "$out" | grep -Fq "would create: LICENSE" || fail "--dry-run must list files it would create"
@@ -72,13 +72,13 @@ echo "$out" | grep -Fq "skip (exists): SECURITY.md" || fail "--dry-run must list
 
 t="$TEST_ROOT/dry-empty"
 mkdir -p "$t"
-bash "$APPLY" "$t" p owner repo --lang=node --dry-run >/dev/null 2>&1
+bash "$APPLY" "$t" p owner repo --lang=node --dry-run --conduct-contact=conduct@example.org >/dev/null 2>&1
 [ -z "$(ls -A "$t")" ] || fail "--dry-run on an empty directory must not create anything"
 
 # 3) --force: 既存ファイルを上書きする（利用者の他のファイルには触れない）
 t="$TEST_ROOT/force"
 seed "$t"
-out="$(bash "$APPLY" "$t" p owner repo --lang=python --force 2>&1)"
+out="$(bash "$APPLY" "$t" p owner repo --lang=python --force --conduct-contact=conduct@example.org 2>&1)"
 ! grep -Fxq "ORIGINAL CONTRIBUTING.md" "$t/CONTRIBUTING.md" || fail "--force must overwrite CONTRIBUTING.md"
 ! grep -Fxq "ORIGINAL pyproject.toml" "$t/pyproject.toml" || fail "--force must overwrite pyproject.toml"
 echo "$out" | grep -Fq "overwrite: CONTRIBUTING.md" || fail "--force must report overwritten files"
@@ -89,10 +89,10 @@ grep -Fq '{{PROJECT_NAME}}' "$t/.github/workflows/own.yml" || fail "--force must
 t="$TEST_ROOT/node-force"
 mkdir -p "$t"
 printf '{"name": "ORIGINAL"}\n' >"$t/package.json"
-bash "$APPLY" "$t" p owner repo --lang=node >/dev/null 2>&1
+bash "$APPLY" "$t" p owner repo --conduct-contact=conduct@example.org --lang=node >/dev/null 2>&1
 grep -Fq '"name": "ORIGINAL"' "$t/package.json" || fail "existing package.json must be kept without --force"
 [ ! -e "$t/package-lock.json" ] || fail "package-lock.json must not be created next to a kept package.json"
-bash "$APPLY" "$t" p owner repo --lang=node --force >/dev/null 2>&1
+bash "$APPLY" "$t" p owner repo --conduct-contact=conduct@example.org --lang=node --force >/dev/null 2>&1
 ! grep -Fq '"name": "ORIGINAL"' "$t/package.json" || fail "--force must overwrite package.json"
 grep -Fq '"lint:md"' "$t/package.json" || fail "--force must write the template package.json"
 [ -f "$t/package-lock.json" ] || fail "--force must write package-lock.json with the template package.json"
@@ -104,7 +104,7 @@ printf 'legacy-ci\n' >"$t/.github/workflows/ci.yml"
 printf 'legacy-lint\n' >"$t/.github/workflows/lint.yml"
 printf 'legacy-release\n' >"$t/.github/workflows/release.yml"
 before="$(cd "$t" && find . -type f -exec shasum {} + | sort)"
-out="$(bash "$APPLY" "$t" p owner repo --lang=node --update-actions --dry-run 2>&1)"
+out="$(bash "$APPLY" "$t" p owner repo --conduct-contact=conduct@example.org --lang=node --update-actions --dry-run 2>&1)"
 after="$(cd "$t" && find . -type f -exec shasum {} + | sort)"
 [ "$before" = "$after" ] || fail "--dry-run --update-actions must not change any file"
 ! echo "$out" | grep -Fq "✓" || fail "--dry-run must not report completed actions (✓): $(echo "$out" | grep -F "✓")"

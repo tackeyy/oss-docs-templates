@@ -36,14 +36,14 @@ expect_rejected missing-positional "Usage" p owner
 
 # 使い方表示にすべてのオプションが載っている
 usage="$(bash "$APPLY" 2>&1 || true)"
-for opt in --lang --license --copyright-holder --contact-handle --contact-email --description-ja --update-actions --force --dry-run; do
+for opt in --lang --license --copyright-holder --contact-handle --contact-email --description-ja --update-actions --force --dry-run --conduct-contact; do
   echo "$usage" | grep -Fq -- "$opt" || fail "usage must list $opt"
 done
 
 # 正しい指定は従来どおり通る
 ok="$TEST_ROOT/ok"
 mkdir -p "$ok"
-bash "$APPLY" "$ok" p owner repo --license=mit >/dev/null || fail "valid invocation must succeed"
+bash "$APPLY" "$ok" p owner repo --license=mit --conduct-contact=conduct@example.org >/dev/null || fail "valid invocation must succeed"
 [ -f "$ok/LICENSE" ] || fail "valid --license must create LICENSE"
 
 # 未定義変数とパイプ途中の失敗を検出する設定になっている

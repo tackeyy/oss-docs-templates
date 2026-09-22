@@ -19,7 +19,7 @@ gen() {
   local name="$1"
   shift
   mkdir -p "$TEST_ROOT/$name"
-  bash "$APPLY" "$TEST_ROOT/$name" p owner repo "$@" >/dev/null
+  bash "$APPLY" "$TEST_ROOT/$name" p owner repo --conduct-contact=conduct@example.org "$@" >/dev/null
   echo "$TEST_ROOT/$name"
 }
 
@@ -65,13 +65,13 @@ grep -Fq "ci.yml" "$node_dir/.changeset/README.md" || fail "changeset README mus
 # 黙って汎用の内容のまま残さず、どのファイルが言語別の内容になっていないかを警告する
 t="$TEST_ROOT/reapply"
 mkdir -p "$t"
-bash "$APPLY" "$t" p owner repo >/dev/null
-out="$(bash "$APPLY" "$t" p owner repo --lang=node 2>&1)"
+bash "$APPLY" "$t" p owner repo --conduct-contact=conduct@example.org >/dev/null
+out="$(bash "$APPLY" "$t" p owner repo --conduct-contact=conduct@example.org --lang=node 2>&1)"
 for f in .github/dependabot.yml .github/PULL_REQUEST_TEMPLATE.md; do
   echo "$out" | grep -F "⚠" | grep -Fq "$f" || fail "re-applying with --lang must warn that $f was kept without node-specific content"
 done
 # --force で再適用すれば言語別の内容になる
-bash "$APPLY" "$t" p owner repo --lang=node --force >/dev/null
+bash "$APPLY" "$t" p owner repo --conduct-contact=conduct@example.org --lang=node --force >/dev/null
 [ "$(ecosystems "$t")" = "github-actions npm " ] || fail "--force re-apply must add the npm ecosystem"
 
 echo "All language-specific tests passed."
