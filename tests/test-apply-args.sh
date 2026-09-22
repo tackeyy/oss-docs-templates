@@ -36,7 +36,7 @@ expect_rejected missing-positional "Usage" p owner
 
 # 使い方表示にすべてのオプションが載っている
 usage="$(bash "$APPLY" 2>&1 || true)"
-for opt in --lang --license --copyright-holder --contact-handle --contact-email --description-ja --update-actions; do
+for opt in --lang --license --copyright-holder --contact-handle --contact-email --description-ja --update-actions --force --dry-run; do
   echo "$usage" | grep -Fq -- "$opt" || fail "usage must list $opt"
 done
 
