@@ -2,9 +2,8 @@
 # --lang=python で空ディレクトリに適用した生成物に ruff check を実行し、
 # pyproject.toml の ruff 設定が ruff check --show-settings でエラーなく読まれることを検査する。
 #
-# ruff format --check . は、生成された docs/TESTING.md の Python コードブロックが
-# ruff 0.16 の整形結果と一致せず終了コード 1 になる。テンプレートはここでは直さない。
-# この検査は失敗条件にしない（既知の欠陥。別の変更で直す）。
+# ruff format --check . の成否は tests/test-python-format-after-apply.sh が検査する。
+# このファイルは整形を実行せず、整形の成否を失敗条件にしない。
 #
 # ruff が無いときは ruff check と show-settings を実行したことにしない。
 # REQUIRE_TOOLS=1 のときは失敗する（CI はこれで、未導入を成功にしない）。
