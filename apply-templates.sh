@@ -2,7 +2,7 @@
 # OSS Documentation Templates - Apply Script
 # Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--update-actions] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
 
-set -e
+set -euo pipefail
 
 # Color codes
 RED='\033[0;31m'
@@ -10,6 +10,22 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+usage() {
+  echo -e "${RED}Usage: $0 <target-directory> <project-name> <repo-owner> <repo-name> [options]${NC}" >&2
+  cat >&2 <<'USAGE'
+Options:
+  --lang=<node|go|swift|shell|python>   Add language-specific templates
+  --license=<apache-2.0|mit>            Create LICENSE
+  --copyright-holder=<name>             Copyright holder for LICENSE (default: repo owner)
+  --contact-handle=<handle>             Security contact handle (default: repo owner)
+  --contact-email=<email>               Security contact email
+  --description-ja=<text>               Short Japanese description for README.ja.md
+  --update-actions                      Replace managed GitHub Actions workflows
+USAGE
+  echo -e "${YELLOW}Example: $0 ~/dev/my-project my-project owner repo --lang=node --license=mit${NC}" >&2
+  echo -e "${BLUE}Supported languages: node, go, swift, shell, python${NC}" >&2
+}
 
 # Parse arguments
 TARGET_DIR=""
@@ -26,33 +42,18 @@ UPDATE_ACTIONS=false
 
 for arg in "$@"; do
   case $arg in
-    --lang=*)
-      LANGUAGE="${arg#*=}"
-      shift
-      ;;
-    --license=*)
-      LICENSE_CHOICE="${arg#*=}"
-      shift
-      ;;
-    --copyright-holder=*)
-      COPYRIGHT_HOLDER="${arg#*=}"
-      shift
-      ;;
-    --contact-handle=*)
-      CONTACT_HANDLE="${arg#*=}"
-      shift
-      ;;
-    --contact-email=*)
-      CONTACT_EMAIL="${arg#*=}"
-      shift
-      ;;
-    --description-ja=*)
-      PROJECT_DESCRIPTION_JA="${arg#*=}"
-      shift
-      ;;
-    --update-actions)
-      UPDATE_ACTIONS=true
-      shift
+    --lang=*) LANGUAGE="${arg#*=}" ;;
+    --license=*) LICENSE_CHOICE="${arg#*=}" ;;
+    --copyright-holder=*) COPYRIGHT_HOLDER="${arg#*=}" ;;
+    --contact-handle=*) CONTACT_HANDLE="${arg#*=}" ;;
+    --contact-email=*) CONTACT_EMAIL="${arg#*=}" ;;
+    --description-ja=*) PROJECT_DESCRIPTION_JA="${arg#*=}" ;;
+    --update-actions) UPDATE_ACTIONS=true ;;
+    -*)
+      # 綴りを誤ったオプションを黙って無視すると、指定したつもりの設定が抜けたまま成功する
+      echo -e "${RED}Error: Unknown option: $arg${NC}" >&2
+      usage
+      exit 1
       ;;
     *)
       if [ -z "$TARGET_DIR" ]; then
@@ -63,17 +64,18 @@ for arg in "$@"; do
         REPO_OWNER="$arg"
       elif [ -z "$REPO_NAME" ]; then
         REPO_NAME="$arg"
+      else
+        echo -e "${RED}Error: Unexpected argument: $arg${NC}" >&2
+        usage
+        exit 1
       fi
-      shift
       ;;
   esac
 done
 
 # Validate required arguments
 if [ -z "$TARGET_DIR" ] || [ -z "$PROJECT_NAME" ] || [ -z "$REPO_OWNER" ] || [ -z "$REPO_NAME" ]; then
-  echo -e "${RED}Usage: $0 <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--update-actions] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]${NC}"
-  echo -e "${YELLOW}Example: $0 ~/dev/my-project my-project owner repo --lang=node --contact-handle=owner --contact-email=security@example.com --description-ja='短い説明'${NC}"
-  echo -e "${BLUE}Supported languages: node, go, swift, shell, python${NC}"
+  usage
   exit 1
 fi
 
