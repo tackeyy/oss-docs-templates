@@ -38,4 +38,17 @@ for script in lint:md lint:yaml; do
   echo "$out" | grep -Fq "$script" || fail "apply output must mention missing script $script"
 done
 
+# 4) 既存の ci.yml を残す場合は、生成した ci.yml を前提にした警告を出さない（古い ci.yml がそのまま動くため）
+t2="$TEST_ROOT/project-with-ci"
+mkdir -p "$t2/.github/workflows"
+printf '{\n  "name": "existing"\n}\n' >"$t2/package.json"
+printf 'name: legacy\n' >"$t2/.github/workflows/ci.yml"
+out2="$(bash "$SCRIPT_DIR/apply-templates.sh" "$t2" p owner repo --lang=node --conduct-contact=conduct@example.org 2>&1)"
+grep -Fxq 'name: legacy' "$t2/.github/workflows/ci.yml" || fail "existing ci.yml must be kept"
+! echo "$out2" | grep -Fq "CI will skip" || fail "must not warn about the generated ci.yml when the existing ci.yml is kept"
+! echo "$out2" | grep -Fq "required by ci.yml" || fail "must not claim the kept ci.yml needs package-lock.json"
+# --update-actions で差し替える場合は警告する
+out3="$(bash "$SCRIPT_DIR/apply-templates.sh" "$t2" p owner repo --lang=node --conduct-contact=conduct@example.org --update-actions 2>&1)"
+echo "$out3" | grep -Fq "CI will skip" || fail "must warn when --update-actions replaces ci.yml"
+
 echo "All node existing-package tests passed."
