@@ -49,4 +49,16 @@ dir="$(gen node-apache --lang=node --license=apache-2.0)"
 dir="$(gen node-none --lang=node)"
 [ "$(json "$dir/package.json" license)" = '"UNLICENSED"' ] || fail "package.json license must be UNLICENSED when no license is chosen"
 
+# 3) JSON の特殊文字を含む値でも package.json / package-lock.json が壊れず、値がそのまま入る
+holder='Example "Quoted" \ Holder'
+name='demo "cli"'
+t="$TEST_ROOT/json-escape"
+mkdir -p "$t"
+bash "$APPLY" "$t" "$name" acme demo-cli --conduct-contact=conduct@example.org --lang=node --license=mit --copyright-holder="$holder" >/dev/null
+[ "$(json "$t/package.json" author)" = "$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$holder")" ] || fail "package.json author must hold the copyright holder verbatim"
+[ "$(json "$t/package.json" description)" = "$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$name")" ] || fail "package.json description must hold the project name verbatim"
+json "$t/package-lock.json" name >/dev/null || fail "package-lock.json must stay valid JSON"
+# JSON 以外のファイルにはエスケープしない値が入る
+grep -Fq "$holder" "$t/LICENSE" || fail "LICENSE must hold the copyright holder without JSON escaping"
+
 echo "All origin value tests passed."

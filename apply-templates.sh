@@ -187,6 +187,10 @@ fi
 
 replace_placeholders() {
   local file="$1"
+  # JSON ファイルへは、値を JSON の文字列としてエスケープしてから入れる（" や \ で壊さない）
+  local json_escape=""
+  case "$file" in *.json) json_escape=1 ;; esac
+  JSON_ESCAPE="$json_escape" \
   PROJECT_NAME="$PROJECT_NAME" \
   REPO_OWNER="$REPO_OWNER" \
   REPO_NAME="$REPO_NAME" \
@@ -202,6 +206,13 @@ replace_placeholders() {
   TEST_COMMAND="$TEST_COMMAND" \
   DEPENDABOT_PACKAGE_BLOCK="$DEPENDABOT_PACKAGE_BLOCK" \
     perl -0pi -e '
+      our $escaped;
+      if ($ENV{JSON_ESCAPE} && !$escaped++) {
+        for my $k (keys %ENV) {
+          $ENV{$k} =~ s/(["\\])/\\$1/g;
+          $ENV{$k} =~ s/([\x00-\x1f])/sprintf("\\u%04x", ord($1))/ge;
+        }
+      }
       s/\{\{PROJECT_NAME\}\}/$ENV{PROJECT_NAME}/g;
       s/\{\{REPO_OWNER\}\}/$ENV{REPO_OWNER}/g;
       s/\{\{REPO_NAME\}\}/$ENV{REPO_NAME}/g;
