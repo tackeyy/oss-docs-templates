@@ -113,7 +113,7 @@ npm ci
 npm run lint
 ```
 
-`npm run lint` runs `lint:md` and `lint:sh`, and it succeeds immediately after apply.
+`npm run lint` runs `lint:md` and `lint:sh`, and it succeeds immediately after apply to an empty directory.
 `lint:sh` is `find … | xargs -0 -r shellcheck`. With no `*.sh` files, `-r` keeps GNU xargs
 from starting shellcheck. BSD xargs accepts `-r` and already skips empty input.
 Before `npm run typecheck`, `npm test`, or `npm run build`, add those scripts and their

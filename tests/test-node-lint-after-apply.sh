@@ -1,5 +1,6 @@
 #!/bin/bash
 # --lang=node で空ディレクトリに適用した直後、その repo の lint が通ることを検査する。
+# README の主言語が英語のときと --readme-lang=ja のときを、両方検査する。
 #
 # npm run lint は lint:md と lint:sh だけ（package.json の現状）。
 # lint:yaml は含めない。ci.yml は yamllint を pip で入れてから別ステップで呼ぶ。
@@ -62,14 +63,29 @@ lint_markdown() {
     || fail "$label: markdownlint must report 0 errors (output: $lint_out)"
 }
 
+ci_and_lint() {
+  local dir="$1" label="$2" ci_out
+  if ! ci_out="$(cd "$dir" && npm ci 2>&1)"; then
+    printf '%s\n' "$ci_out" >&2
+    fail "$label: npm ci must exit 0"
+  fi
+  lint_markdown "$dir" "$label"
+}
+
+# --readme-lang=ja では base/CODE_OF_CONDUCT.ja.md が CODE_OF_CONDUCT.md になる。
+# 行末スペース 2 つは硬改行で、GitHub では <br> になり、段落が文の途中で改行されて見える。
+ja="$TEST_ROOT/project-ja"
+mkdir -p "$ja"
+bash "$APPLY" "$ja" p owner repo --lang=node --readme-lang=ja --conduct-contact=conduct@example.org >/dev/null
+if grep -q '  $' "$ja/CODE_OF_CONDUCT.md"; then
+  fail "ja: CODE_OF_CONDUCT.md must not contain a two-space hard break"
+fi
+
 if ! command -v npm >/dev/null 2>&1; then
   echo "SKIP: npm is not installed; npm ci, npm run lint, and markdownlint were not run"
 else
-  if ! ci_out="$(cd "$target" && npm ci 2>&1)"; then
-    printf '%s\n' "$ci_out" >&2
-    fail "npm ci must exit 0"
-  fi
-  lint_markdown "$target" "en"
+  ci_and_lint "$target" "en"
+  ci_and_lint "$ja" "ja"
 fi
 
 if ! command -v yamllint >/dev/null 2>&1; then

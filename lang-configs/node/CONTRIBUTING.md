@@ -52,7 +52,7 @@ git clone https://github.com/YOUR_USERNAME/{{REPO_NAME}}.git
 cd {{REPO_NAME}}
 
 # 2. Install dependencies
-npm install
+npm ci
 
 # 3. Set up environment variables if the project provides an example
 [ -f .env.example ] && cp .env.example .env
