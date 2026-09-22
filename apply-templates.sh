@@ -20,8 +20,8 @@ Options:
   --copyright-holder=<name>             Copyright holder for LICENSE (default: repo owner)
   --conduct-contact=<email-or-url>      Where Code of Conduct reports go (required when CODE_OF_CONDUCT.md is written)
   --code-owners="<@user @org/team ...>"  Owners in .github/CODEOWNERS (default: @repo-owner; use a team for organizations)
-  --contact-handle=<handle>             Security contact handle (default: repo owner)
-  --contact-email=<email>               Security contact email
+  --contact-handle=<handle>             Optional X handle listed in SECURITY.md as an additional contact
+  --contact-email=<email>               Optional email listed in SECURITY.md as an additional contact
   --readme-lang=<en|ja>                 Language of the main README (default: en). With en, README.ja.md is added as a translation
   --description-ja=<text>               Short Japanese description for README.ja.md
   --update-actions                      Replace managed GitHub Actions workflows
@@ -132,8 +132,15 @@ if [ -z "$CONDUCT_CONTACT" ] && { [ ! -e "$TARGET_DIR/CODE_OF_CONDUCT.md" ] || [
   echo -e "${BLUE}Specify an email address or URL where Code of Conduct reports should go.${NC}" >&2
   exit 1
 fi
-CONTACT_HANDLE="${CONTACT_HANDLE:-$REPO_OWNER}"
-CONTACT_EMAIL="${CONTACT_EMAIL:-security@example.com}"
+# 脆弱性の報告は GitHub の Private vulnerability reporting を標準の窓口にする。
+# メールや X は指定されたときだけ追加の連絡先として載せる（ダミーの既定値を配らない）。
+SECURITY_EXTRA_CONTACTS=""
+if [ -n "$CONTACT_EMAIL" ] || [ -n "$CONTACT_HANDLE" ]; then
+  SECURITY_EXTRA_CONTACTS=$'\nIf you cannot use GitHub, you can also contact us:\n'
+  [ -z "$CONTACT_EMAIL" ] || SECURITY_EXTRA_CONTACTS+=$'\n- **Email**: '"$CONTACT_EMAIL"
+  [ -z "$CONTACT_HANDLE" ] || SECURITY_EXTRA_CONTACTS+=$'\n- **X (Twitter)**: [@'"$CONTACT_HANDLE"'](https://x.com/'"$CONTACT_HANDLE"')'
+  SECURITY_EXTRA_CONTACTS+=$'\n'
+fi
 PROJECT_DESCRIPTION_JA="${PROJECT_DESCRIPTION_JA:-$PROJECT_NAME の説明をここに書いてください。}"
 PACKAGE_IMPORT_NAME="${REPO_NAME//-/_}"
 COPYRIGHT_HOLDER="${COPYRIGHT_HOLDER:-$REPO_OWNER}"
@@ -196,6 +203,7 @@ replace_placeholders() {
   REPO_NAME="$REPO_NAME" \
   CONTACT_HANDLE="$CONTACT_HANDLE" \
   CONTACT_EMAIL="$CONTACT_EMAIL" \
+  SECURITY_EXTRA_CONTACTS="$SECURITY_EXTRA_CONTACTS" \
   PROJECT_DESCRIPTION_JA="$PROJECT_DESCRIPTION_JA" \
   PACKAGE_IMPORT_NAME="$PACKAGE_IMPORT_NAME" \
   COPYRIGHT_HOLDER="$COPYRIGHT_HOLDER" \
@@ -218,6 +226,7 @@ replace_placeholders() {
       s/\{\{REPO_NAME\}\}/$ENV{REPO_NAME}/g;
       s/\{\{CONTACT_HANDLE\}\}/$ENV{CONTACT_HANDLE}/g;
       s/\{\{CONTACT_EMAIL\}\}/$ENV{CONTACT_EMAIL}/g;
+      s/\{\{SECURITY_EXTRA_CONTACTS\}\}/$ENV{SECURITY_EXTRA_CONTACTS}/g;
       s/\{\{PROJECT_DESCRIPTION_JA\}\}/$ENV{PROJECT_DESCRIPTION_JA}/g;
       s/\{\{PACKAGE_IMPORT_NAME\}\}/$ENV{PACKAGE_IMPORT_NAME}/g;
       s/\{\{COPYRIGHT_HOLDER\}\}/$ENV{COPYRIGHT_HOLDER}/g;
@@ -272,7 +281,7 @@ echo -e "${GREEN}Applying OSS documentation templates...${NC}"
 echo "Target: $TARGET_DIR"
 echo "Project: $PROJECT_NAME"
 echo "Repository: $REPO_OWNER/$REPO_NAME"
-echo "Security contact: @$CONTACT_HANDLE / $CONTACT_EMAIL"
+echo "Security reports: https://github.com/$REPO_OWNER/$REPO_NAME/security/advisories/new"
 if [ -n "$LANGUAGE" ]; then
   echo "Language: $LANGUAGE"
 fi
@@ -409,6 +418,9 @@ if [ -n "$LANGUAGE" ]; then
   fi
 fi
 
+echo ""
+echo -e "${YELLOW}⚠ SECURITY.md points reporters to GitHub private vulnerability reporting.${NC}"
+echo "  Enable it in the repository: Settings > Security > Private vulnerability reporting"
 echo ""
 if [ "$DRY_RUN" = true ]; then
   echo -e "${GREEN}Dry run complete: no files were written${NC}"

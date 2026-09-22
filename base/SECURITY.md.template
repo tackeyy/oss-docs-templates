@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-We release security patches for the following versions:
+Security fixes are applied to the latest release.
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -10,29 +10,31 @@ We release security patches for the following versions:
 
 ## Reporting a Vulnerability
 
-**Please do not report security vulnerabilities through public GitHub issues.**
+**Please do not report security vulnerabilities through public GitHub issues, discussions, or pull requests.**
 
-To report a security vulnerability, please contact us via:
-
-- **X (Twitter)**: [@{{CONTACT_HANDLE}}](https://x.com/{{CONTACT_HANDLE}})
-- **Email**: {{CONTACT_EMAIL}}
-
-Please include the following information:
+Report vulnerabilities privately through GitHub:
+<https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/security/advisories/new>
+{{SECURITY_EXTRA_CONTACTS}}
+Please include as much of the following as you can:
 
 - Type of vulnerability (e.g., injection, authentication bypass, XSS)
-- Full paths of source file(s) related to the vulnerability
+- Paths of the source files related to the vulnerability
 - Steps to reproduce
 - Proof-of-concept or exploit code (if possible)
 - Impact assessment
 
+Do not include real credentials, tokens, or personal data in your report.
+
 ## Response Process
 
-1. We will acknowledge receipt within **48 hours**
-2. We will provide an initial assessment within **7 days**
-3. We will release a patch and publish a security advisory after the fix is ready
+This project is maintained on a best-effort basis.
+
+1. We aim to acknowledge your report within **7 days**
+2. We will investigate and keep you informed of our progress
+3. We will release a fix and publish a security advisory when the fix is ready
 
 ## Disclosure Policy
 
 - We follow a coordinated disclosure policy
-- We ask that you give us reasonable time to address the vulnerability before public disclosure
-- We will credit you in the security advisory (unless you prefer to remain anonymous)
+- Please give us reasonable time to address the vulnerability before public disclosure
+- We will credit you in the security advisory unless you prefer to remain anonymous
