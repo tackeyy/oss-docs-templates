@@ -1,6 +1,6 @@
 #!/bin/bash
 # OSS Documentation Templates - Apply Script
-# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> --conduct-contact=<email-or-url> [--lang=<language>] [--update-actions] [--force] [--dry-run] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
+# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> --conduct-contact=<email-or-url> [--readme-lang=<en|ja>] [--code-owners="<owners>"] [--lang=<language>] [--update-actions] [--force] [--dry-run] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
 
 set -euo pipefail
 
