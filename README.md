@@ -61,12 +61,12 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 | File | Purpose | Customization |
 |------|---------|---------------|
 | **CODE_OF_CONDUCT.md** | Community standards (Contributor Covenant 3.0; Japanese translation with `--readme-lang=ja`) | ⭐ Low |
-| **.github/ISSUE_TEMPLATE/** | Bug report, feature request, question templates | ⭐⭐ Medium |
-| **.github/PULL_REQUEST_TEMPLATE.md** | PR checklist and guidelines | ⭐⭐ Medium |
+| **.github/ISSUE_TEMPLATE/** | Bug, feature, and question forms. Blank issues are disabled; vulnerability reports go to private vulnerability reporting. Labels are GitHub's defaults (`bug`, `enhancement`, `question`) | ⭐⭐ Medium |
+| **.github/PULL_REQUEST_TEMPLATE.md** | PR checklist, plus a warning not to paste real data or tokens and to report vulnerabilities privately | ⭐⭐ Medium |
 | **SECURITY.md** | Vulnerability reporting through GitHub private vulnerability reporting (extra contacts optional) | ⭐⭐ Medium |
 | **.github/CODEOWNERS** | Review owners for every pull request (`--code-owners`; use a team for organizations) | ⭐ Low |
-| **.github/dependabot.yml** | Weekly updates for GitHub Actions, plus the package ecosystem of `--lang` (npm, gomod, pip, swift) | ⭐ Low |
-| **.github/workflows/security.yml** | Secret scanning with the gitleaks CLI (pinned version and checksum) on push to `main` or `master`, and on pull requests targeting `main` or `master` | ⭐ Low |
+| **.github/dependabot.yml** | Weekly updates for GitHub Actions, plus the package ecosystem of `--lang` (npm, gomod, pip, swift). Minor and patch updates are grouped; major updates are a separate group. Labels are omitted so Dependabot creates its defaults | ⭐ Low |
+| **.github/workflows/security.yml** | Secret scanning with the gitleaks CLI (pinned version and checksum) on push to `main` or `master`, and on pull requests targeting `main` or `master`. The scan fails when the workspace is not a git repository | ⭐ Low |
 | **LICENSE** (with `--license=apache-2.0\|mit`) | License file with year/holder auto-filled (`--copyright-holder` to override) | ⭐ Low |
 
 ### Language-Specific Templates (Optional)
@@ -204,7 +204,7 @@ After applying templates, review and customize:
 - [ ] **.github/CODEOWNERS**
   - [ ] Owners (organizations need a team such as `@org/maintainers`)
 - [ ] **.github templates**
-  - [ ] Issue labels (if different from defaults)
+  - [ ] Issue labels (templates use GitHub's defaults `bug`, `enhancement`, and `question`; create any other label in the repository before adding it to a template)
   - [ ] PR checklist items
   - [ ] Required checks match the generated workflow job names
 
