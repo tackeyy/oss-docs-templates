@@ -237,7 +237,7 @@ After applying templates, review and customize:
 - ✅ Linter: ruff (fast Python linter)
 - ✅ Type checker: mypy
 - ✅ Test framework: pytest
-- ✅ Python versions: 3.9+
+- ✅ Python versions: 3.10+
 
 ## 📖 Best Practices Reference
 

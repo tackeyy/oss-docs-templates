@@ -53,7 +53,7 @@ if ! settings="$(cd "$target" && NO_COLOR=1 ruff check --show-settings . 2>&1)";
 fi
 printf '%s\n' "$settings" | grep -Fq "linter.line_length = 100" \
   || fail "ruff must read line-length from pyproject.toml (output: $settings)"
-printf '%s\n' "$settings" | grep -Fq "linter.unresolved_target_version = 3.9" \
+printf '%s\n' "$settings" | grep -Fq "linter.unresolved_target_version = 3.10" \
   || fail "ruff must read target-version from pyproject.toml (output: $settings)"
 printf '%s\n' "$settings" | grep -Fq "sample_pkg => Known(FirstParty)" \
   || fail "ruff must read known-first-party from pyproject.toml (output: $settings)"

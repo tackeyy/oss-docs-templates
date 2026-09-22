@@ -122,12 +122,15 @@ python_lint="$TEST_ROOT/python/.github/workflows/lint.yml"
 assert_job_count "$python_lint" 1
 assert_contains "$python_lint" "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
 assert_contains "$python_lint" "actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0"
-assert_contains "$python_lint" "python-version: ['3.9', '3.10', '3.11', '3.12']"
+assert_contains "$python_lint" "python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']"
 assert_contains "$python_lint" "ruff check ."
 assert_contains "$python_lint" "mypy ."
 assert_contains "$python_lint" "pytest --cov"
 assert_contains "$python_lint" "cache: 'pip'"
-assert_contains "$python_lint" "matrix.python-version == '3.9'"
+assert_contains "$python_lint" "matrix.python-version == '3.14'"
+assert_contains "$python_lint" "There are no .py[i] files in directory '.'"
+assert_contains "$python_lint" "treating pytest exit code 5 as success"
+assert_not_contains "$python_lint" "3.9"
 
 shell_lint="$TEST_ROOT/shell/.github/workflows/lint.yml"
 assert_job_count "$shell_lint" 1

@@ -4,14 +4,15 @@
 
 このテンプレートは、lint、型検査、テスト、build、coverage、secret scanを削らず、同じruntime setupの重複とjob単位の
 分数切り上げを減らす。新規生成時のPR workflowは、Node.jsで7 jobから1 job、Goで2 jobから1 job、ShellとSwiftで
-それぞれ複数jobから1 jobへ統合する。Pythonは対応4バージョンを維持しながら、lintと型検査をPython 3.9のmatrix実行へ
-統合する。Node.jsは24 LTSを基準とし、releaseは通常CIの成功後かつChangesets設定が揃った場合だけ実行する。
+それぞれ複数jobから1 jobへ統合する。Pythonは対応5バージョン（3.10、3.11、3.12、3.13、3.14）を維持しながら、
+lintと型検査を最新のPython 3.14のmatrix実行へ統合する。Node.jsは24 LTSを基準とし、releaseは通常CIの成功後かつ
+Changesets設定が揃った場合だけ実行する。
 
 ## 品質を維持する不変条件
 
 - 既存のlint、型検査、テスト、build、coverage、secret scanを残す
 - Node.jsのプロジェクト固有scriptは`package.json`に定義されている場合に必ず実行する
-- Pythonの対応バージョン3.9、3.10、3.11、3.12を全て検証する
+- Pythonの対応バージョン3.10、3.11、3.12、3.13、3.14を全て検証する
 - Goのrace detectorを維持する
 - Swiftのcoverage生成を維持する
 - 失敗したcommitをreleaseやdeployへ進めない
@@ -24,7 +25,7 @@
 | Node.js PR | 7 job | 1 job | typecheck、Markdown、YAML、ShellCheck、test、build |
 | Node.js main | 2 workflow | 1 workflow、2直列job | quality成功後のrelease |
 | Go | 2 job | 1 job | golangci-lint、race test、coverage |
-| Python | 6実行 | 4実行 | ruff、mypy、4バージョンのtest、coverage |
+| Python | 6実行 | 5実行 | ruff、mypy、5バージョンのtest、coverage |
 | Shell | 3 job | 1 job | ShellCheck、shfmt、Bats |
 | Swift | 2 job | 1 job | SwiftLint、test、coverage |
 | 共通security | 1 job | 1 job | 全履歴に対するgitleaks |
@@ -51,7 +52,7 @@ Node.jsのreleaseはCI workflow内のdownstream jobとし、`needs: quality`で�
 - Node.jsの新規生成物には`npm ci`で使うlockfileを含める
 - Node.js runtimeを24 LTSへ統一し、公式`actions/*`をNode 24対応majorへ更新する
 - Swift Package Managerの`.build`をXcode 15単位でcacheする
-- Python coverageは代表バージョンの3.9からだけ送信する
+- Python coverageは代表バージョンの3.14からだけ送信する
 - Node.js coverage artifactは失敗時だけ1日保持する
 
 ### Dependabot
@@ -84,7 +85,7 @@ Node.jsのreleaseはCI workflow内のdownstream jobとし、`needs: quality`で�
 
 - Node.js: `CI / Quality`
 - Go: `Lint / Go Quality`
-- Python: `Lint / Python 3.9`、`3.10`、`3.11`、`3.12`
+- Python: `Lint / Python 3.10`、`3.11`、`3.12`、`3.13`、`3.14`
 - Shell: `Lint / Shell Quality`
 - Swift: `Lint / Swift Quality`
 - 全言語: `Security / Secret Scan (gitleaks)`
