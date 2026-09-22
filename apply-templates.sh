@@ -138,6 +138,12 @@ PROJECT_DESCRIPTION_JA="${PROJECT_DESCRIPTION_JA:-$PROJECT_NAME の説明をこ�
 PACKAGE_IMPORT_NAME="${REPO_NAME//-/_}"
 COPYRIGHT_HOLDER="${COPYRIGHT_HOLDER:-$REPO_OWNER}"
 CODE_OWNERS="${CODE_OWNERS:-@$REPO_OWNER}"
+# package.json の license は --license と一致させる（未指定なら公開許諾なし）
+case "$LICENSE_CHOICE" in
+  mit) PACKAGE_LICENSE="MIT" ;;
+  apache-2.0) PACKAGE_LICENSE="Apache-2.0" ;;
+  *) PACKAGE_LICENSE="UNLICENSED" ;;
+esac
 YEAR="$(date +%Y)"
 
 # 言語ごとの値。base のテンプレートは言語に依存しないよう、これらを置換変数で受ける。
@@ -192,6 +198,7 @@ replace_placeholders() {
   YEAR="$YEAR" \
   CONDUCT_CONTACT="$CONDUCT_CONTACT" \
   CODE_OWNERS="$CODE_OWNERS" \
+  PACKAGE_LICENSE="$PACKAGE_LICENSE" \
   TEST_COMMAND="$TEST_COMMAND" \
   DEPENDABOT_PACKAGE_BLOCK="$DEPENDABOT_PACKAGE_BLOCK" \
     perl -0pi -e '
@@ -206,6 +213,7 @@ replace_placeholders() {
       s/\{\{YEAR\}\}/$ENV{YEAR}/g;
       s/\{\{CONDUCT_CONTACT\}\}/$ENV{CONDUCT_CONTACT}/g;
       s/\{\{CODE_OWNERS\}\}/$ENV{CODE_OWNERS}/g;
+      s/\{\{PACKAGE_LICENSE\}\}/$ENV{PACKAGE_LICENSE}/g;
       s/\{\{TEST_COMMAND\}\}/$ENV{TEST_COMMAND}/g;
       s/\n?\{\{DEPENDABOT_PACKAGE_BLOCK\}\}/$ENV{DEPENDABOT_PACKAGE_BLOCK}/g;
     ' "$file"
