@@ -9,8 +9,3 @@ shell=bash
 
 # Enable optional checks
 enable=all
-
-# Exclude directories
-exclude-dir=.git
-exclude-dir=node_modules
-exclude-dir=.build
