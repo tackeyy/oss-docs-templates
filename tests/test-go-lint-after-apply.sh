@@ -3,7 +3,8 @@
 # config verify を通り、errcheck の check-blank が空白代入を報告することを検査する。
 #
 # go または golangci-lint が無いときは、検証を実行したことにしない。
-# SKIP: を出して終了コード 0 で戻る（CI の ubuntu には golangci-lint が無い）。
+# REQUIRE_TOOLS=1 のときは失敗する（CI はこれで、未導入を成功にしない）。
+# 未設定のときは SKIP: を出して終了コード 0 で戻る。
 # その場合、このファイルは「検証に成功した」とは書かない。
 
 set -euo pipefail
@@ -27,6 +28,9 @@ missing=()
 command -v go >/dev/null 2>&1 || missing+=(go)
 command -v golangci-lint >/dev/null 2>&1 || missing+=(golangci-lint)
 if [ "${#missing[@]}" -gt 0 ]; then
+  if [ "${REQUIRE_TOOLS:-}" = "1" ]; then
+    fail "REQUIRE_TOOLS=1 but missing: ${missing[*]}"
+  fi
   echo "SKIP: ${missing[*]} is not installed; config verify and check-blank were not run"
   exit 0
 fi
