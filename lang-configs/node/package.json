@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "lint": "npm run lint:md && npm run lint:sh",
-    "lint:md": "markdownlint-cli2 '**/*.md' '!node_modules' '!CONTRIBUTING_GUIDE_PROPOSAL.md'",
+    "lint:md": "markdownlint-cli2 '**/*.md' '!node_modules'",
     "lint:yaml": "yamllint .",
     "lint:sh": "find . -name '*.sh' -not -path './node_modules/*' -print0 | xargs -0 shellcheck"
   },
@@ -16,15 +16,9 @@
     "type": "git",
     "url": "https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}.git"
   },
-  "keywords": [
-    "oss",
-    "documentation",
-    "templates",
-    "contributing",
-    "code-of-conduct"
-  ],
-  "author": "tackeyy",
-  "license": "MIT",
+  "keywords": [],
+  "author": "{{COPYRIGHT_HOLDER}}",
+  "license": "{{PACKAGE_LICENSE}}",
   "engines": {
     "node": ">=24"
   }
