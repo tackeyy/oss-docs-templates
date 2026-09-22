@@ -39,7 +39,7 @@ jobs:
         run: |
           if node -e '
             const p = require("./package.json");
-            process.exit(p.scripts?.release ? 0 : 1);
+            process.exit(p.scripts?.release && p.private !== true ? 0 : 1);
           ' && [ -f .changeset/config.json ]; then
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
@@ -110,6 +110,11 @@ jobs:
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org'
 
+      # npm trusted publishing (OIDC) requires npm CLI 11.5.1 or later.
+      # https://docs.npmjs.com/trusted-publishers
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@^11.5.1
+
       - name: Install dependencies
         run: npm ci
 
@@ -122,4 +127,3 @@ jobs:
           commit: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
