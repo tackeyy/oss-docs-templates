@@ -79,6 +79,17 @@ jobs:
           tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/actionlint" actionlint
           echo "$RUNNER_TEMP/actionlint" >> "$GITHUB_PATH"
 
+      # mypy と pytest の wheel は CPython 3.12 / linux x86_64 向けに
+      # .github/python-tools-requirements.txt で版と sha256 を固定する。
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+          cache: false
+
+      - name: Install mypy and pytest
+        run: python -m pip install --no-cache-dir --require-hashes -r .github/python-tools-requirements.txt
+
       - name: Test suite
         env:
           REQUIRE_TOOLS: "1"

@@ -24,7 +24,9 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        # 3.10 は 2026-10 まで security サポート。3.14 が現行の最新安定版。
+        # lint と型検査は最古ではなく最新の版だけで実行する。
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -37,7 +39,7 @@ jobs:
       - name: Install tooling and dependencies
         run: |
           pip install pytest pytest-cov
-          if [ "${{ matrix.python-version }}" = "3.9" ]; then
+          if [ "${{ matrix.python-version }}" = "3.14" ]; then
             pip install ruff mypy
           fi
           if [ -f requirements.txt ]; then
@@ -48,22 +50,47 @@ jobs:
           fi
 
       - name: Run ruff check
-        if: matrix.python-version == '3.9'
+        if: matrix.python-version == '3.14'
         run: ruff check .
 
       - name: Run ruff format check
-        if: matrix.python-version == '3.9'
+        if: matrix.python-version == '3.14'
         run: ruff format --check .
 
+      # 適用直後は .py が無く、mypy は致命エラー exit 2 と
+      # 「There are no .py[i] files...」を出す。型エラーは exit 1 なので、そのまま失敗させる。
+      # exit 2 は他の致命エラーにも使うため、空ツリーのメッセージのときだけ成功にする。
       - name: Run mypy
-        if: matrix.python-version == '3.9'
-        run: mypy .
+        if: matrix.python-version == '3.14'
+        run: |
+          set +e
+          output="$(mypy . 2>&1)"
+          status=$?
+          set -e
+          printf '%s\n' "$output"
+          if [ "$status" -eq 2 ] && printf '%s\n' "$output" | grep -Fq "There are no .py[i] files in directory '.'"; then
+            echo "No Python files found; skipping mypy"
+            exit 0
+          fi
+          exit "$status"
 
+      # pytest の exit 5 は「テストを 1 件も収集できなかった」専用のコード。
+      # 失敗（1）や収集エラー（2、4）とは区別できる。適用直後はテストが無いので 5 を成功にする。
       - name: Run tests
-        run: pytest --cov --cov-report=xml
+        run: |
+          set +e
+          pytest --cov --cov-report=xml
+          status=$?
+          set -e
+          if [ "$status" -eq 5 ]; then
+            echo "No tests collected; treating pytest exit code 5 as success"
+            exit 0
+          fi
+          exit "$status"
 
+      # テストが 0 件のときは coverage.xml が作られない。ファイルがあるときだけ送る。
       - name: Upload coverage
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
-        if: matrix.python-version == '3.9'
+        if: matrix.python-version == '3.14' && hashFiles('coverage.xml') != ''
         with:
           file: ./coverage.xml

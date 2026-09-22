@@ -1,0 +1,37 @@
+# CI（.github/workflows/ci.yml）が入れる mypy / pytest / pytest-cov。
+# 対象は CPython 3.12 の linux x86_64（GitHub-hosted ubuntu-latest）。
+# 更新するときは一時ディレクトリで次を実行し、落ちた wheel の sha256 を書き直す。
+#
+#   pip download --dest "$tmpdir" \
+#     --platform manylinux2014_x86_64 --python-version 312 \
+#     --implementation cp --abi cp312 --only-binary=:all: \
+#     'mypy==2.3.1' 'pytest==9.1.1' 'pytest-cov==7.1.0'
+#
+# インストールは `python -m pip install --require-hashes -r` このファイル。
+
+ast-serialize==0.11.2 \
+    --hash=sha256:a7004ba572f09be34342ccb98dcd4bad5707d3d81adc8cb4c3f685d2a2c51bbc
+coverage==7.16.1 \
+    --hash=sha256:e82e10b9d290f60b63459cfb245a841aec347603997206296b93881463a93dcf
+iniconfig==2.3.0 \
+    --hash=sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12
+librt==0.15.0 \
+    --hash=sha256:89cc46cfd15022e35084355478c9ac809d90b1152222706ac9a7655ec21df6fa
+mypy==2.3.1 \
+    --hash=sha256:858fc57d3d91fa728e33e7ad71def60fc6272694607b306cd3292db53ae39080
+mypy-extensions==1.1.0 \
+    --hash=sha256:1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505
+packaging==26.3 \
+    --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
+pathspec==1.1.1 \
+    --hash=sha256:a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189
+pluggy==1.6.0 \
+    --hash=sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746
+pygments==2.21.0 \
+    --hash=sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9
+pytest==9.1.1 \
+    --hash=sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c
+pytest-cov==7.1.0 \
+    --hash=sha256:a0461110b7865f9a271aa1b51e516c9a95de9d696734a2f71e3e78f46e1d4678
+typing-extensions==4.16.0 \
+    --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8
