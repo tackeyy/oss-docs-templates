@@ -56,15 +56,20 @@ npm install
 
 # 3. Set up environment variables if the project provides an example
 [ -f .env.example ] && cp .env.example .env
-
-# 4. Lint Markdown. The generated package.json scripts are only
-#    lint, lint:md, lint:yaml, and lint:sh. The only devDependency is markdownlint-cli2.
-#    `npm run lint` also runs lint:sh (`find | xargs -0 shellcheck` without --no-run-if-empty).
-#    With no *.sh files, GNU xargs on Linux starts shellcheck with no arguments and lint fails.
-npm run lint:md
 ```
 
-The template does not add `typecheck`, `test`, `build`, or `release` scripts, and it does not install TypeScript, Vitest, or changesets. `tsconfig.json` and `vitest.config.ts` are only starter config. In CI, `npm run typecheck`, `npm run lint:md`, `npm run lint:yaml`, `npm run test`, and `npm run build` use `--if-present`: `lint:md` and `lint:yaml` run because those scripts are generated; `typecheck`, `test`, and `build` are skipped until you add them. Shellcheck in CI is `ludeeus/action-shellcheck` and runs on every CI job, not via an npm script.
+The generated `package.json` scripts are only `lint`, `lint:md`, `lint:yaml`, and `lint:sh`.
+The only devDependency is `markdownlint-cli2`. The template does not add `typecheck`, `test`,
+`build`, or `release` scripts, and it does not install TypeScript, Vitest, or changesets.
+`tsconfig.json` and `vitest.config.ts` are only starter config. Generated template documents
+currently have markdownlint violations, so `npm run lint:md` fails immediately after apply.
+`npm run lint` fails as well: it also runs `lint:sh` (`find | xargs -0 shellcheck` without
+`--no-run-if-empty`). With no `*.sh` files, GNU xargs on Linux starts shellcheck with no
+arguments and that script fails. The template does not add any shell scripts. In CI,
+`npm run typecheck`, `npm run lint:md`, `npm run lint:yaml`, `npm run test`, and
+`npm run build` use `--if-present`: `lint:md` and `lint:yaml` run because those scripts are
+generated; `typecheck`, `test`, and `build` are skipped until you add them. Shellcheck in CI
+is `ludeeus/action-shellcheck` and runs on every CI run, not via an npm script.
 
 After you add the missing scripts and dependencies, the setup commands are:
 
@@ -79,7 +84,8 @@ npm start -- --help
 
 ### TypeScript Style
 
-- Use **strict TypeScript mode** (set in the copied `tsconfig.json`; the `typescript` package is not installed until you add it)
+- Use **strict TypeScript mode** (set in the copied `tsconfig.json`; the
+  `typescript` package is not installed until you add it)
 - Prefer `const` over `let`, avoid `var`
 - Use descriptive variable names (`meetingId` not `id`)
 - Avoid `any` type - use `unknown` if needed
@@ -127,7 +133,9 @@ chore: update dependencies to latest versions
 
 ### Running Tests
 
-`npm test` works after you add a `test` script. The generated `package.json` does not include one. CI calls `npm run test --if-present`, so the step is skipped until that script exists.
+`npm test` works after you add a `test` script. The generated `package.json`
+does not include one. CI calls `npm run test --if-present`, so the step is
+skipped until that script exists.
 
 ```bash
 # Run all tests (after you add the script)

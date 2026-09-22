@@ -110,12 +110,13 @@ bash ~/templates/oss-docs/apply-templates.sh \
 
 cd ~/dev/my-cli
 npm ci
-# Do not run `npm run lint` immediately after apply. It runs `lint:md` and `lint:sh`.
-# `lint:sh` is `find … | xargs -0 shellcheck` without `--no-run-if-empty`. With no
-# `*.sh` files, GNU xargs (Linux) still starts shellcheck, and the script fails.
-# The template does not add any shell scripts. Lint Markdown until you add some:
-npm run lint:md
 ```
+
+Generated template documents currently have markdownlint violations, so `npm run lint:md`
+fails immediately after apply. `npm run lint` fails as well: it runs `lint:md` and `lint:sh`.
+`lint:sh` is `find … | xargs -0 shellcheck` without `--no-run-if-empty`. With no `*.sh` files,
+GNU xargs (Linux) still starts shellcheck, and that script fails. The template does not add
+any shell scripts.
 
 ### Go Project
 
@@ -211,7 +212,7 @@ After applying templates, review and customize:
 - ✅ Copied config, not installed tools: `tsconfig.json` (Node 24, ESM, NodeNext, compatible with `@modelcontextprotocol/sdk`) and `vitest.config.ts`. `typescript` and `vitest` are not dependencies, and there is no `typecheck`, `test`, or `build` script until you add them.
 - ✅ Package manager: npm (`npm ci` with the generated package-lock.json)
 - ✅ Runtime: Node.js 24 LTS + npm 11 (`engines.node` is `>=24`)
-- ✅ CI (`ci.yml`): `npm run typecheck`, `npm run lint:md`, `npm run lint:yaml`, `npm run test`, and `npm run build` all use `--if-present`. The generated package.json includes `lint:md` and `lint:yaml`, so those two run; `typecheck`, `test`, and `build` are skipped until you add the scripts. Shellcheck is not an npm script: the `ludeeus/action-shellcheck` step runs on every CI job, with or without a matching script.
+- ✅ CI (`ci.yml`): `npm run typecheck`, `npm run lint:md`, `npm run lint:yaml`, `npm run test`, and `npm run build` all use `--if-present`. The generated package.json includes `lint:md` and `lint:yaml`, so those two run; `typecheck`, `test`, and `build` are skipped until you add the scripts. Shellcheck is not an npm script: the `ludeeus/action-shellcheck` step runs on every CI run, with or without a matching script.
 - ✅ Gated release job: changesets-based npm publish with [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC, no npm token). It runs only on a push to `main`, after the quality job succeeds, and only when `package.json` has a `release` script, `.changeset/config.json` exists, and the package is not `"private": true`. The generated package.json is `"private": true` and has no `release` script. The template copies `.changeset/README.md`, not `.changeset/config.json`.
 
 ### Go
