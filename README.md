@@ -44,7 +44,7 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 
 | File | Purpose | Customization |
 |------|---------|---------------|
-| **CODE_OF_CONDUCT.md** | Community standards (Contributor Covenant v2.1) | ⭐ Low |
+| **CODE_OF_CONDUCT.md** | Community standards (Contributor Covenant 3.0; Japanese translation with `--readme-lang=ja`) | ⭐ Low |
 | **.github/ISSUE_TEMPLATE/** | Bug report, feature request, question templates | ⭐⭐ Medium |
 | **.github/PULL_REQUEST_TEMPLATE.md** | PR checklist and guidelines | ⭐⭐ Medium |
 | **SECURITY.md** | Vulnerability reporting policy and response process | ⭐⭐ Medium |
@@ -214,7 +214,7 @@ This template is based on extensive research of OSS best practices:
 
 - [GitHub CLI Contributing Guide](https://github.com/cli/cli/blob/trunk/.github/CONTRIBUTING.md)
 - [AWS CLI Contributing](https://github.com/aws/aws-cli/blob/develop/CONTRIBUTING.md)
-- [Contributor Covenant v2.1](https://www.contributor-covenant.org/)
+- [Contributor Covenant 3.0](https://www.contributor-covenant.org/version/3/0/)
 - [How to Build a CONTRIBUTING.md](https://contributing.md/)
 - [GitHub PR Template Best Practices](https://graphite.com/guides/comprehensive-checklist-github-pr-template)
 
