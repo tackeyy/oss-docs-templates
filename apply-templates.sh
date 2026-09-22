@@ -22,6 +22,8 @@ Options:
   --contact-email=<email>               Security contact email
   --description-ja=<text>               Short Japanese description for README.ja.md
   --update-actions                      Replace managed GitHub Actions workflows
+  --force                               Overwrite files that already exist (default: keep them)
+  --dry-run                             Show what would be created, overwritten or skipped; write nothing
 USAGE
   echo -e "${YELLOW}Example: $0 ~/dev/my-project my-project owner repo --lang=node --license=mit${NC}" >&2
   echo -e "${BLUE}Supported languages: node, go, swift, shell, python${NC}" >&2
@@ -39,6 +41,8 @@ CONTACT_HANDLE=""
 CONTACT_EMAIL=""
 PROJECT_DESCRIPTION_JA=""
 UPDATE_ACTIONS=false
+FORCE=false
+DRY_RUN=false
 
 for arg in "$@"; do
   case $arg in
@@ -49,6 +53,8 @@ for arg in "$@"; do
     --contact-email=*) CONTACT_EMAIL="${arg#*=}" ;;
     --description-ja=*) PROJECT_DESCRIPTION_JA="${arg#*=}" ;;
     --update-actions) UPDATE_ACTIONS=true ;;
+    --force) FORCE=true ;;
+    --dry-run) DRY_RUN=true ;;
     -*)
       # 綴りを誤ったオプションを黙って無視すると、指定したつもりの設定が抜けたまま成功する
       echo -e "${RED}Error: Unknown option: $arg${NC}" >&2
@@ -134,6 +140,44 @@ replace_placeholders() {
     ' "$file"
 }
 
+# 生成先の相対パス（表示用）
+rel() {
+  printf '%s' "${1#"$TARGET_DIR"/}"
+}
+
+# テンプレートを 1 ファイル配置する。既存ファイルは --force のときだけ上書きする。
+# --dry-run では予定だけを表示して何も書かない。
+# usage: install_file <src> <dst> [--placeholders]
+install_file() {
+  local src="$1" dst="$2" subst="${3:-}" verb="create"
+  if [ -e "$dst" ]; then
+    if [ "$FORCE" != true ]; then
+      echo "- skip (exists): $(rel "$dst")"
+      return 0
+    fi
+    verb="overwrite"
+  fi
+  if [ "$DRY_RUN" = true ]; then
+    echo "would $verb: $(rel "$dst")"
+    return 0
+  fi
+  mkdir -p "$(dirname "$dst")"
+  cp "$src" "$dst"
+  if [ "$subst" = "--placeholders" ]; then
+    replace_placeholders "$dst"
+  fi
+  echo "✓ $verb: $(rel "$dst")"
+}
+
+# 管理対象の workflow を退避してから差し替える（--update-actions 用）
+run_or_report() {
+  if [ "$DRY_RUN" = true ]; then
+    echo "would run: $*"
+  else
+    "$@"
+  fi
+}
+
 echo -e "${GREEN}Applying OSS documentation templates...${NC}"
 echo "Target: $TARGET_DIR"
 echo "Project: $PROJECT_NAME"
@@ -145,63 +189,42 @@ fi
 if [ "$UPDATE_ACTIONS" = true ]; then
   echo "GitHub Actions: update managed workflows"
 fi
+if [ "$FORCE" = true ]; then
+  echo -e "${YELLOW}Existing files will be overwritten (--force)${NC}"
+fi
+if [ "$DRY_RUN" = true ]; then
+  echo -e "${YELLOW}Dry run: no files will be written${NC}"
+fi
 echo ""
 
 # Copy base templates (language-independent)
 echo -e "${YELLOW}Copying base templates...${NC}"
 
-# Copy CODE_OF_CONDUCT.md
-cp "$SCRIPT_DIR/base/CODE_OF_CONDUCT.md" "$TARGET_DIR/"
-echo "✓ CODE_OF_CONDUCT.md copied"
+install_file "$SCRIPT_DIR/base/CODE_OF_CONDUCT.md" "$TARGET_DIR/CODE_OF_CONDUCT.md"
 
-# Copy .github templates
-cp -r "$SCRIPT_DIR/base/.github" "$TARGET_DIR/"
+# .github templates (raw *.template files are rendered separately below)
 while IFS= read -r template_file; do
-  replace_placeholders "$template_file"
-done < <(find "$TARGET_DIR/.github" -type f \( -name "*.yml" -o -name "*.md" \))
-echo "✓ .github templates copied and customized"
+  install_file "$template_file" "$TARGET_DIR/.github/${template_file#"$SCRIPT_DIR/base/.github/"}" --placeholders
+done < <(find "$SCRIPT_DIR/base/.github" -type f ! -name "*.template" | sort)
 
-# Copy README.ja.md template (if exists)
 if [ -f "$SCRIPT_DIR/base/README.ja.md.template" ]; then
-  cp "$SCRIPT_DIR/base/README.ja.md.template" "$TARGET_DIR/README.ja.md"
-  replace_placeholders "$TARGET_DIR/README.ja.md"
-  echo "✓ README.ja.md template copied (customize description and content)"
+  install_file "$SCRIPT_DIR/base/README.ja.md.template" "$TARGET_DIR/README.ja.md" --placeholders
 fi
 
-# Copy SECURITY.md template (if exists)
 if [ -f "$SCRIPT_DIR/base/SECURITY.md.template" ]; then
-  cp "$SCRIPT_DIR/base/SECURITY.md.template" "$TARGET_DIR/SECURITY.md"
-  replace_placeholders "$TARGET_DIR/SECURITY.md"
-  echo "✓ SECURITY.md template copied and customized"
+  install_file "$SCRIPT_DIR/base/SECURITY.md.template" "$TARGET_DIR/SECURITY.md" --placeholders
 fi
 
-# Copy .changeset README template (if exists)
 if [ -f "$SCRIPT_DIR/base/.changeset/README.md.template" ]; then
-  mkdir -p "$TARGET_DIR/.changeset"
-  cp "$SCRIPT_DIR/base/.changeset/README.md.template" "$TARGET_DIR/.changeset/README.md"
-  echo "✓ .changeset/README.md template copied"
+  install_file "$SCRIPT_DIR/base/.changeset/README.md.template" "$TARGET_DIR/.changeset/README.md"
 fi
 
-# Copy dependabot.yml template (if exists)
 if [ -f "$SCRIPT_DIR/base/.github/dependabot.yml.template" ]; then
-  mkdir -p "$TARGET_DIR/.github"
-  cp "$SCRIPT_DIR/base/.github/dependabot.yml.template" "$TARGET_DIR/.github/dependabot.yml"
-  replace_placeholders "$TARGET_DIR/.github/dependabot.yml"
-  echo "✓ .github/dependabot.yml template copied and customized"
+  install_file "$SCRIPT_DIR/base/.github/dependabot.yml.template" "$TARGET_DIR/.github/dependabot.yml" --placeholders
 fi
 
-# Remove raw *.template artifacts that were copied by `cp -r base/.github`
-find "$TARGET_DIR/.github" -type f -name "*.template" -delete
-
-# Copy LICENSE (if --license specified)
-if [ -n "$LICENSE_CHOICE" ]; then
-  if [ -f "$TARGET_DIR/LICENSE" ]; then
-    echo -e "${YELLOW}⚠ LICENSE already exists, skipping (--license=$LICENSE_CHOICE ignored)${NC}"
-  elif [ -f "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" ]; then
-    cp "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" "$TARGET_DIR/LICENSE"
-    replace_placeholders "$TARGET_DIR/LICENSE"
-    echo "✓ LICENSE ($LICENSE_CHOICE) copied — copyright: $YEAR $COPYRIGHT_HOLDER"
-  fi
+if [ -n "$LICENSE_CHOICE" ] && [ -f "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" ]; then
+  install_file "$SCRIPT_DIR/base/licenses/$LICENSE_CHOICE.txt.template" "$TARGET_DIR/LICENSE" --placeholders
 fi
 
 # Copy language-specific templates if specified
@@ -210,93 +233,72 @@ if [ -n "$LANGUAGE" ]; then
 
   LANG_DIR="$SCRIPT_DIR/lang-configs/$LANGUAGE"
 
-  # Copy CONTRIBUTING.md
   if [ -f "$LANG_DIR/CONTRIBUTING.md" ]; then
-    cp "$LANG_DIR/CONTRIBUTING.md" "$TARGET_DIR/CONTRIBUTING.md"
-    replace_placeholders "$TARGET_DIR/CONTRIBUTING.md"
-    echo "✓ CONTRIBUTING.md copied and customized"
+    install_file "$LANG_DIR/CONTRIBUTING.md" "$TARGET_DIR/CONTRIBUTING.md" --placeholders
   fi
-
-  # Copy TESTING.md
   if [ -f "$LANG_DIR/TESTING.md" ]; then
-    mkdir -p "$TARGET_DIR/docs"
-    cp "$LANG_DIR/TESTING.md" "$TARGET_DIR/docs/TESTING.md"
-    replace_placeholders "$TARGET_DIR/docs/TESTING.md"
-    echo "✓ docs/TESTING.md copied and customized"
+    install_file "$LANG_DIR/TESTING.md" "$TARGET_DIR/docs/TESTING.md" --placeholders
   fi
 
-  # Copy lint configuration files
   case $LANGUAGE in
     node)
       if [ ! -f "$TARGET_DIR/package.json" ] && [ -f "$LANG_DIR/package.json" ]; then
-        cp "$LANG_DIR/package.json" "$TARGET_DIR/"
-        replace_placeholders "$TARGET_DIR/package.json"
-        echo "✓ package.json copied and customized"
+        install_file "$LANG_DIR/package.json" "$TARGET_DIR/package.json" --placeholders
         if [ -f "$LANG_DIR/package-lock.json.template" ]; then
-          cp "$LANG_DIR/package-lock.json.template" "$TARGET_DIR/package-lock.json"
-          replace_placeholders "$TARGET_DIR/package-lock.json"
-          echo "✓ package-lock.json copied and customized"
+          install_file "$LANG_DIR/package-lock.json.template" "$TARGET_DIR/package-lock.json" --placeholders
         fi
       elif [ -f "$TARGET_DIR/package.json" ]; then
-        echo "✓ Existing package.json preserved"
+        echo "- skip (exists): package.json"
         if [ ! -f "$TARGET_DIR/package-lock.json" ]; then
           echo -e "${YELLOW}⚠ package-lock.json is required by ci.yml; run npm install and commit it${NC}"
         fi
       fi
-      [ -f "$LANG_DIR/.markdownlint.json" ] && cp "$LANG_DIR/.markdownlint.json" "$TARGET_DIR/" && echo "✓ .markdownlint.json copied"
-      [ -f "$LANG_DIR/.yamllint.yml" ] && cp "$LANG_DIR/.yamllint.yml" "$TARGET_DIR/" && echo "✓ .yamllint.yml copied"
-      # Node 24 + TypeScript ESM configs (MCP SDK compatible)
-      if [ -f "$LANG_DIR/tsconfig.json" ]; then
-        [ ! -f "$TARGET_DIR/tsconfig.json" ] && cp "$LANG_DIR/tsconfig.json" "$TARGET_DIR/" && echo "✓ tsconfig.json copied (Node 24 + ESM + NodeNext)"
-      fi
-      if [ -f "$LANG_DIR/vitest.config.ts" ]; then
-        [ ! -f "$TARGET_DIR/vitest.config.ts" ] && cp "$LANG_DIR/vitest.config.ts" "$TARGET_DIR/" && echo "✓ vitest.config.ts copied"
-      fi
+      for config in .markdownlint.json .yamllint.yml tsconfig.json vitest.config.ts; do
+        if [ -f "$LANG_DIR/$config" ]; then
+          install_file "$LANG_DIR/$config" "$TARGET_DIR/$config"
+        fi
+      done
       ;;
     go)
-      [ -f "$LANG_DIR/.golangci.yml" ] && cp "$LANG_DIR/.golangci.yml" "$TARGET_DIR/" && echo "✓ .golangci.yml copied"
+      [ ! -f "$LANG_DIR/.golangci.yml" ] || install_file "$LANG_DIR/.golangci.yml" "$TARGET_DIR/.golangci.yml"
       ;;
     swift)
-      [ -f "$LANG_DIR/.swiftlint.yml" ] && cp "$LANG_DIR/.swiftlint.yml" "$TARGET_DIR/" && echo "✓ .swiftlint.yml copied"
+      [ ! -f "$LANG_DIR/.swiftlint.yml" ] || install_file "$LANG_DIR/.swiftlint.yml" "$TARGET_DIR/.swiftlint.yml"
       ;;
     shell)
-      [ -f "$LANG_DIR/.shellcheckrc" ] && cp "$LANG_DIR/.shellcheckrc" "$TARGET_DIR/" && echo "✓ .shellcheckrc copied"
+      [ ! -f "$LANG_DIR/.shellcheckrc" ] || install_file "$LANG_DIR/.shellcheckrc" "$TARGET_DIR/.shellcheckrc"
       ;;
     python)
-      if [ -f "$LANG_DIR/pyproject.toml" ]; then
-        cp "$LANG_DIR/pyproject.toml" "$TARGET_DIR/"
-        replace_placeholders "$TARGET_DIR/pyproject.toml"
-        echo "✓ pyproject.toml copied and customized"
-      fi
+      [ ! -f "$LANG_DIR/pyproject.toml" ] || install_file "$LANG_DIR/pyproject.toml" "$TARGET_DIR/pyproject.toml" --placeholders
       ;;
   esac
 
-  # Copy GitHub Actions workflow
+  WORKFLOWS="$TARGET_DIR/.github/workflows"
+
+  # lint.yml
   if [ -f "$LANG_DIR/workflows/lint.yml" ]; then
-    mkdir -p "$TARGET_DIR/.github/workflows"
-    cp "$LANG_DIR/workflows/lint.yml" "$TARGET_DIR/.github/workflows/lint.yml"
-    replace_placeholders "$TARGET_DIR/.github/workflows/lint.yml"
-    echo "✓ .github/workflows/lint.yml copied and customized"
-  elif [ "$LANGUAGE" = "node" ] && [ "$UPDATE_ACTIONS" = true ] && [ -f "$TARGET_DIR/.github/workflows/lint.yml" ]; then
-    mv "$TARGET_DIR/.github/workflows/lint.yml" "$TARGET_DIR/.github/workflows/lint.yml.disabled"
+    install_file "$LANG_DIR/workflows/lint.yml" "$WORKFLOWS/lint.yml" --placeholders
+  elif [ "$LANGUAGE" = "node" ] && [ "$UPDATE_ACTIONS" = true ] && [ -f "$WORKFLOWS/lint.yml" ]; then
+    run_or_report mv "$WORKFLOWS/lint.yml" "$WORKFLOWS/lint.yml.disabled"
     echo "✓ Legacy lint.yml disabled (backup: lint.yml.disabled)"
   fi
-  # Additional workflows: ci.yml (quality checks and gated release)
+
+  # ci.yml（--update-actions は管理対象 workflow の明示的な差し替え指示なので、退避してから上書きする）
   if [ -f "$LANG_DIR/workflows/ci.yml" ]; then
-    mkdir -p "$TARGET_DIR/.github/workflows"
-    if [ "$UPDATE_ACTIONS" = true ] || [ ! -f "$TARGET_DIR/.github/workflows/ci.yml" ]; then
-      if [ "$UPDATE_ACTIONS" = true ] && [ -f "$TARGET_DIR/.github/workflows/ci.yml" ]; then
-        cp "$TARGET_DIR/.github/workflows/ci.yml" "$TARGET_DIR/.github/workflows/ci.yml.pre-cost-optimization"
-      fi
-      cp "$LANG_DIR/workflows/ci.yml" "$TARGET_DIR/.github/workflows/ci.yml"
-      echo "✓ .github/workflows/ci.yml copied"
+    if [ "$UPDATE_ACTIONS" = true ] && [ -f "$WORKFLOWS/ci.yml" ]; then
+      run_or_report cp "$WORKFLOWS/ci.yml" "$WORKFLOWS/ci.yml.pre-cost-optimization"
+      run_or_report cp "$LANG_DIR/workflows/ci.yml" "$WORKFLOWS/ci.yml"
+      echo "✓ ci.yml replaced (backup: ci.yml.pre-cost-optimization)"
+    else
+      install_file "$LANG_DIR/workflows/ci.yml" "$WORKFLOWS/ci.yml"
     fi
   fi
+
+  # release.yml
   if [ -f "$LANG_DIR/workflows/release.yml" ]; then
-    mkdir -p "$TARGET_DIR/.github/workflows"
-    [ ! -f "$TARGET_DIR/.github/workflows/release.yml" ] && cp "$LANG_DIR/workflows/release.yml" "$TARGET_DIR/.github/workflows/release.yml" && echo "✓ .github/workflows/release.yml copied (set NPM_TOKEN secret)"
-  elif [ "$LANGUAGE" = "node" ] && [ "$UPDATE_ACTIONS" = true ] && [ -f "$TARGET_DIR/.github/workflows/release.yml" ]; then
-    mv "$TARGET_DIR/.github/workflows/release.yml" "$TARGET_DIR/.github/workflows/release.yml.disabled"
+    install_file "$LANG_DIR/workflows/release.yml" "$WORKFLOWS/release.yml"
+  elif [ "$LANGUAGE" = "node" ] && [ "$UPDATE_ACTIONS" = true ] && [ -f "$WORKFLOWS/release.yml" ]; then
+    run_or_report mv "$WORKFLOWS/release.yml" "$WORKFLOWS/release.yml.disabled"
     echo "✓ Legacy release.yml disabled (release is gated by ci.yml; backup: release.yml.disabled)"
   fi
 fi

@@ -1,0 +1,88 @@
+#!/bin/bash
+# 既存ファイルの扱いを検査する。
+# 既存 repo に適用したとき、その repo 独自の CONTRIBUTING.md や SECURITY.md などを
+# 確認なしに上書きすると、独自の方針が消える。
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+APPLY="$SCRIPT_DIR/apply-templates.sh"
+TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/oss-docs-overwrite.XXXXXX")"
+trap 'rm -rf "$TEST_ROOT"' EXIT
+
+fail() {
+  echo "FAIL: $*" >&2
+  exit 1
+}
+
+# テンプレートが生成しうるファイルに、既存の独自内容を置く
+EXISTING=(
+  CODE_OF_CONDUCT.md
+  CONTRIBUTING.md
+  SECURITY.md
+  README.ja.md
+  pyproject.toml
+  docs/TESTING.md
+  .github/PULL_REQUEST_TEMPLATE.md
+  .github/ISSUE_TEMPLATE/bug_report.yml
+  .github/dependabot.yml
+  .github/workflows/security.yml
+  .github/workflows/lint.yml
+  .changeset/README.md
+)
+
+seed() {
+  local target="$1"
+  local f
+  for f in "${EXISTING[@]}"; do
+    mkdir -p "$target/$(dirname "$f")"
+    printf 'ORIGINAL %s\n' "$f" >"$target/$f"
+  done
+  # 利用者自身の .template ファイルと、置換変数の文字列を含む利用者の workflow
+  printf 'mine\n' >"$target/.github/own.yml.template"
+  printf 'name: {{PROJECT_NAME}}\n' >"$target/.github/workflows/own.yml"
+}
+
+assert_original() {
+  local target="$1" f
+  for f in "${EXISTING[@]}"; do
+    grep -Fxq "ORIGINAL $f" "$target/$f" || fail "$f must be preserved"
+  done
+  [ -f "$target/.github/own.yml.template" ] || fail "user's own .template file must not be deleted"
+  grep -Fq '{{PROJECT_NAME}}' "$target/.github/workflows/own.yml" || fail "placeholders in files not written by the script must not be replaced"
+}
+
+# 1) 既定: 既存ファイルは保持し、スキップを表示する
+t="$TEST_ROOT/default"
+seed "$t"
+out="$(bash "$APPLY" "$t" p owner repo --lang=python 2>&1)"
+assert_original "$t"
+echo "$out" | grep -Fq "skip (exists): CONTRIBUTING.md" || fail "skipped files must be reported"
+[ -f "$t/.github/ISSUE_TEMPLATE/feature_request.yml" ] || fail "missing files must still be created"
+
+# 2) --dry-run: 既存があっても無くても、何も書き込まない
+t="$TEST_ROOT/dry-existing"
+seed "$t"
+before="$(cd "$t" && find . -type f -exec shasum {} + | sort)"
+out="$(bash "$APPLY" "$t" p owner repo --lang=node --license=mit --dry-run 2>&1)"
+after="$(cd "$t" && find . -type f -exec shasum {} + | sort)"
+[ "$before" = "$after" ] || fail "--dry-run must not change any file"
+echo "$out" | grep -Fq "would create: LICENSE" || fail "--dry-run must list files it would create"
+echo "$out" | grep -Fq "skip (exists): SECURITY.md" || fail "--dry-run must list files it would skip"
+
+t="$TEST_ROOT/dry-empty"
+mkdir -p "$t"
+bash "$APPLY" "$t" p owner repo --lang=node --dry-run >/dev/null 2>&1
+[ -z "$(ls -A "$t")" ] || fail "--dry-run on an empty directory must not create anything"
+
+# 3) --force: 既存ファイルを上書きする（利用者の他のファイルには触れない）
+t="$TEST_ROOT/force"
+seed "$t"
+out="$(bash "$APPLY" "$t" p owner repo --lang=python --force 2>&1)"
+! grep -Fxq "ORIGINAL CONTRIBUTING.md" "$t/CONTRIBUTING.md" || fail "--force must overwrite CONTRIBUTING.md"
+! grep -Fxq "ORIGINAL pyproject.toml" "$t/pyproject.toml" || fail "--force must overwrite pyproject.toml"
+echo "$out" | grep -Fq "overwrite: CONTRIBUTING.md" || fail "--force must report overwritten files"
+[ -f "$t/.github/own.yml.template" ] || fail "--force must not delete user's own .template file"
+grep -Fq '{{PROJECT_NAME}}' "$t/.github/workflows/own.yml" || fail "--force must not touch files the templates do not provide"
+
+echo "All overwrite tests passed."
