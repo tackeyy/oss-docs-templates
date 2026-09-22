@@ -10,8 +10,10 @@ cd ~/dev/your-project
 
 ### ステップ2: テンプレートを適用
 
+`--lang` は付けていません。言語別の `CONTRIBUTING.md` と `docs/TESTING.md` はこのコマンドでは作られません。
+
 ```bash
-bash ~/dev/templates/oss-docs/apply-templates.sh \
+bash ~/templates/oss-docs/apply-templates.sh \
   ~/dev/your-project \
   your-project-name \
   your-github-username \
@@ -21,11 +23,14 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
 
 ### ステップ3: カスタマイズ
 
+ステップ2で作られるのはベーステンプレートです。編集するのはそのファイルです。
+
 ```bash
-# 必要に応じて編集
-vim CONTRIBUTING.md
-vim docs/TESTING.md
+vim CODE_OF_CONDUCT.md
+vim SECURITY.md
 ```
+
+`CONTRIBUTING.md` と `docs/TESTING.md` を編集するのは、`--lang` を付けて適用したときだけです。
 
 ## 📚 詳細ドキュメント
 
@@ -42,7 +47,7 @@ vim docs/TESTING.md
 ```bash
 mkdir ~/dev/awesome-cli && cd ~/dev/awesome-cli
 npm init -y
-bash ~/dev/templates/oss-docs/apply-templates.sh . awesome-cli tackeyy awesome-cli --conduct-contact=conduct@example.com
+bash ~/templates/oss-docs/apply-templates.sh . awesome-cli tackeyy awesome-cli --conduct-contact=conduct@example.com
 ```
 
 ### 既存プロジェクト
@@ -50,37 +55,39 @@ bash ~/dev/templates/oss-docs/apply-templates.sh . awesome-cli tackeyy awesome-c
 ```bash
 cd ~/dev/existing-project
 git checkout -b add-contributing-docs
-bash ~/dev/templates/oss-docs/apply-templates.sh . existing-project your-username existing-project --conduct-contact=conduct@example.com
+bash ~/templates/oss-docs/apply-templates.sh . existing-project your-username existing-project --conduct-contact=conduct@example.com
 git diff  # 変更内容を確認
 ```
 
 ### Python プロジェクト
 
 ```bash
-bash ~/dev/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-python-app --lang=python --conduct-contact=conduct@example.com
+bash ~/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-python-app --lang=python --conduct-contact=conduct@example.com
 ```
 
 `--lang=node|go|swift|shell|python` を指定すると、言語別の `CONTRIBUTING.md`、`docs/TESTING.md`、lint 設定、GitHub Actions workflow が適用されます。
 
-旧Node workflowをコスト最適化版へ更新する場合だけ`--update-actions`を追加します。旧workflowは`.disabled`または
-`.pre-cost-optimization`へ退避されます。
+`--update-actions` が差し替え・退避するのは `--lang=node` のときだけです。既存の `ci.yml` は `ci.yml.pre-cost-optimization` に退避してからテンプレートで置き換え、既存の `lint.yml` と `release.yml` は `*.disabled` にリネームします。go / swift / shell / python の既存 workflow は `--update-actions` では置き換わらず、`--force` が無いと skip されます。
 
 ## ⚙️ カスタマイズ必須箇所
 
 最低限、以下を確認・変更してください:
 
-1. **CONTRIBUTING.md**
+1. **CONTRIBUTING.md**（`--lang` を付けたときだけ作られる）
    - [ ] プロジェクト固有のセットアップ手順
    - [ ] 使用している技術スタック
    - [ ] テスト・ビルドコマンド
 
-2. **docs/TESTING.md**
+2. **docs/TESTING.md**（`--lang` を付けたときだけ作られる）
    - [ ] テストフレームワーク名
    - [ ] テストディレクトリ構造
    - [ ] テスト実行コマンド
 
 3. **CODE_OF_CONDUCT.md**
    - [ ] 報告先（`--conduct-contact` で指定した値）
+
+4. **SECURITY.md**
+   - [ ] repo の Settings > Security で Private vulnerability reporting を有効にする
 
 ## 🆘 ヘルプ
 

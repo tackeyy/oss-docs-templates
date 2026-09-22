@@ -467,8 +467,9 @@ if [ -n "$LANGUAGE" ]; then
       echo "5. Review and customize CONTRIBUTING.md"
       echo "6. Enable private vulnerability reporting (Settings > Security) for the link in SECURITY.md"
       echo "7. To enable release: add a release script and .changeset/config.json, set \"private\": false,"
-      echo "   and register this repository with the workflow .github/workflows/ci.yml as a trusted publisher"
-      echo "   on npmjs.com (https://docs.npmjs.com/trusted-publishers). Until then, publishing fails."
+      echo "   and register this repository as a trusted publisher on npmjs.com with the workflow filename"
+      echo "   ci.yml (the filename only, not the path; https://docs.npmjs.com/trusted-publishers). Until then, publishing fails."
+      echo "   The release job requires @changesets/cli v3 (npm install --save-dev @changesets/cli@^3)."
       ;;
     go)
       echo "1. Install golangci-lint: https://golangci-lint.run/usage/install/"
