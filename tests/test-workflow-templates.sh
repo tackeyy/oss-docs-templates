@@ -68,7 +68,7 @@ for language in node go python shell swift; do
   assert_job_count "$TEST_ROOT/$language/.github/workflows/security.yml" 1
   assert_contains "$TEST_ROOT/$language/.github/workflows/security.yml" "cancel-in-progress: true"
   assert_contains "$TEST_ROOT/$language/.github/workflows/security.yml" "actions/checkout@v6"
-  assert_contains "$TEST_ROOT/$language/.github/workflows/security.yml" "gitleaks/gitleaks-action@v3"
+  assert_contains "$TEST_ROOT/$language/.github/workflows/security.yml" "gitleaks\" git --redact"
 done
 
 node_ci="$TEST_ROOT/node/.github/workflows/ci.yml"
