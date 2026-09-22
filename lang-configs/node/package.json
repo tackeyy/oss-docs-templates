@@ -7,7 +7,7 @@
     "lint": "npm run lint:md && npm run lint:sh",
     "lint:md": "markdownlint-cli2 '**/*.md' '!node_modules'",
     "lint:yaml": "yamllint .",
-    "lint:sh": "find . -name '*.sh' -not -path './node_modules/*' -print0 | xargs -0 shellcheck"
+    "lint:sh": "find . -name '*.sh' -not -path './node_modules/*' -print0 | xargs -0 -r shellcheck"
   },
   "devDependencies": {
     "markdownlint-cli2": "^0.12.1"

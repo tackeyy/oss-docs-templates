@@ -19,15 +19,21 @@ The changeset file will be committed with your changes.
 
 ## Release process
 
-Releases are automated by the `release` job in `.github/workflows/ci.yml`. The job runs only after the quality checks pass on `main`, and only when all of the following hold:
+Releases are automated by the `release` job in `.github/workflows/ci.yml`. The job runs only after the quality checks
+pass on `main`, and only when all of the following hold:
 
 - `package.json` has a `release` script
-- `package.json` does not set `"private": true` (the generated `package.json` sets it, so change it to `false` before publishing)
+- `package.json` does not set `"private": true` (the generated `package.json` sets it, so change it to `false` before
+  publishing)
 - `.changeset/config.json` exists
 
-Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC) instead of a long-lived token. Before the first release, register this repository as a trusted publisher on npmjs.com. In the "Workflow filename" field, enter only the filename `ci.yml`, not the path `.github/workflows/ci.yml`. Until it is registered, the publish step fails with an authentication error.
+Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC) instead of a long-lived
+token. Before the first release, register this repository as a trusted publisher on npmjs.com. In the "Workflow
+filename" field, enter only the filename `ci.yml`, not the path `.github/workflows/ci.yml`. Until it is registered, the
+publish step fails with an authentication error.
 
-The release job uses `changesets/action` v2, which requires `@changesets/cli` v3. If `package.json` declares `@changesets/cli` v2, the release job stops with an error. Install v3 with `npm install --save-dev @changesets/cli@^3`.
+The release job uses `changesets/action` v2, which requires `@changesets/cli` v3. If `package.json` declares
+`@changesets/cli` v2, the release job stops with an error. Install v3 with `npm install --save-dev @changesets/cli@^3`.
 
 When changesets are merged to `main`:
 1. A "chore: version packages" PR is automatically created

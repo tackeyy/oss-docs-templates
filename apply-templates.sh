@@ -460,16 +460,17 @@ if [ -n "$LANGUAGE" ]; then
   echo -e "${BLUE}Next steps:${NC}"
   case $LANGUAGE in
     node)
-      echo "1. Run: cd $TARGET_DIR && npm install"
+      echo "1. Run: cd $TARGET_DIR && npm ci"
       echo "2. Run lints: npm run lint"
-      echo "3. Run type check: npm run typecheck"
-      echo "4. Run tests: npm test"
-      echo "5. Review and customize CONTRIBUTING.md"
-      echo "6. Enable private vulnerability reporting (Settings > Security) for the link in SECURITY.md"
-      echo "7. To enable release: add a release script and .changeset/config.json, set \"private\": false,"
+      echo "3. Review and customize CONTRIBUTING.md"
+      echo "4. Enable private vulnerability reporting (Settings > Security) for the link in SECURITY.md"
+      echo "5. To enable release: add a release script and .changeset/config.json, set \"private\": false,"
       echo "   and register this repository as a trusted publisher on npmjs.com with the workflow filename"
       echo "   ci.yml (the filename only, not the path; https://docs.npmjs.com/trusted-publishers). Until then, publishing fails."
       echo "   The release job requires @changesets/cli v3 (npm install --save-dev @changesets/cli@^3)."
+      echo "Before npm run typecheck, npm test, or npm run build: add those scripts and their dependencies."
+      echo "The generated package.json does not include typecheck, test, or build."
+      echo "Before npm run lint:yaml: install yamllint (CI runs: pip install yamllint). lint:yaml is separate from npm run lint."
       ;;
     go)
       echo "1. Install golangci-lint: https://golangci-lint.run/usage/install/"

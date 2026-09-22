@@ -110,13 +110,16 @@ bash ~/templates/oss-docs/apply-templates.sh \
 
 cd ~/dev/my-cli
 npm ci
+npm run lint
 ```
 
-Generated template documents currently have markdownlint violations, so `npm run lint:md`
-fails immediately after apply. `npm run lint` fails as well: it runs `lint:md` and `lint:sh`.
-`lint:sh` is `find … | xargs -0 shellcheck` without `--no-run-if-empty`. With no `*.sh` files,
-GNU xargs (Linux) still starts shellcheck, and that script fails. The template does not add
-any shell scripts.
+`npm run lint` runs `lint:md` and `lint:sh`, and it succeeds immediately after apply to an empty directory.
+`lint:sh` is `find … | xargs -0 -r shellcheck`. With no `*.sh` files, `-r` keeps GNU xargs
+from starting shellcheck. BSD xargs accepts `-r` and already skips empty input.
+Before `npm run typecheck`, `npm test`, or `npm run build`, add those scripts and their
+dependencies. The generated package.json does not include them. Before `npm run lint:yaml`,
+install yamllint (`pip install yamllint`). CI installs it before that step. `lint:yaml` is
+separate from `npm run lint`.
 
 ### Go Project
 
