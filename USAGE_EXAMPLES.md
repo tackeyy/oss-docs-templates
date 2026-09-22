@@ -10,7 +10,7 @@ mkdir ~/dev/awesome-cli
 cd ~/dev/awesome-cli
 
 # テンプレートを適用
-bash ~/dev/templates/oss-docs/apply-templates.sh \
+bash ~/templates/oss-docs/apply-templates.sh \
   ~/dev/awesome-cli \
   awesome-cli \
   tackeyy \
@@ -24,8 +24,8 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
 Applying OSS documentation templates...
 Target: /Users/username/dev/awesome-cli
 Project: awesome-cli
-Repository: your-username/awesome-cli
-Security reports: https://github.com/your-username/awesome-cli/security/advisories/new
+Repository: tackeyy/awesome-cli
+Security reports: https://github.com/tackeyy/awesome-cli/security/advisories/new
 
 Copying base templates...
 ✓ create: CODE_OF_CONDUCT.md
@@ -48,7 +48,7 @@ Copying base templates...
 cd ~/dev/existing-project
 
 # テンプレートを適用
-bash ~/dev/templates/oss-docs/apply-templates.sh \
+bash ~/templates/oss-docs/apply-templates.sh \
   ~/dev/existing-project \
   existing-project \
   your-username \
@@ -62,7 +62,7 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
 
 ```bash
 cd ~/dev/python-project
-bash ~/dev/templates/oss-docs/apply-templates.sh . python-project tackeyy python-project --lang=python --conduct-contact=conduct@example.com
+bash ~/templates/oss-docs/apply-templates.sh . python-project tackeyy python-project --lang=python --conduct-contact=conduct@example.com
 ```
 
 ### Go プロジェクト
@@ -70,14 +70,14 @@ bash ~/dev/templates/oss-docs/apply-templates.sh . python-project tackeyy python
 ```bash
 cd ~/dev/go-project
 
-bash ~/dev/templates/oss-docs/apply-templates.sh . go-project tackeyy go-project --lang=go --conduct-contact=conduct@example.com
+bash ~/templates/oss-docs/apply-templates.sh . go-project tackeyy go-project --lang=go --conduct-contact=conduct@example.com
 ```
 
 ### Shell プロジェクト
 
 ```bash
 cd ~/dev/shell-project
-bash ~/dev/templates/oss-docs/apply-templates.sh . shell-project tackeyy shell-project --lang=shell --conduct-contact=conduct@example.com
+bash ~/templates/oss-docs/apply-templates.sh . shell-project tackeyy shell-project --lang=shell --conduct-contact=conduct@example.com
 ```
 
 ## 高度な使い方
@@ -97,7 +97,7 @@ PROJECTS=(
 for project in "${PROJECTS[@]}"; do
   IFS=':' read -r dir name owner repo <<< "$project"
   echo "Applying to $name..."
-  bash ~/dev/templates/oss-docs/apply-templates.sh "$dir" "$name" "$owner" "$repo" --conduct-contact=conduct@example.com
+  bash ~/templates/oss-docs/apply-templates.sh "$dir" "$name" "$owner" "$repo" --conduct-contact=conduct@example.com
   echo ""
 done
 ```
@@ -108,10 +108,10 @@ done
 
 ```bash
 # Python用テンプレートディレクトリ作成
-cp -r ~/dev/templates/oss-docs ~/dev/templates/oss-docs-python
+cp -r ~/templates/oss-docs ~/templates/oss-docs-python
 
 # カスタマイズ
-cd ~/dev/templates/oss-docs-python
+cd ~/templates/oss-docs-python
 # lang-configs/python/ 配下のテンプレートを編集
 # ...その他のカスタマイズ
 ```
@@ -123,14 +123,14 @@ cd ~/dev/templates/oss-docs-python
 ```bash
 # ディレクトリを作成してから実行
 mkdir -p ~/dev/new-project
-bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/new-project new-project owner repo --conduct-contact=conduct@example.com
+bash ~/templates/oss-docs/apply-templates.sh ~/dev/new-project new-project owner repo --conduct-contact=conduct@example.com
 ```
 
 ### エラー: "Permission denied"
 
 ```bash
 # スクリプトに実行権限を付与
-chmod +x ~/dev/templates/oss-docs/apply-templates.sh
+chmod +x ~/templates/oss-docs/apply-templates.sh
 ```
 
 ### 既存のファイルを上書きしたくない / 上書きしたい
@@ -139,10 +139,10 @@ chmod +x ~/dev/templates/oss-docs/apply-templates.sh
 
 ```bash
 # 何が作成・上書き・スキップされるかを、書き込まずに確認する
-bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/your-project ... --conduct-contact=conduct@example.com --dry-run
+bash ~/templates/oss-docs/apply-templates.sh ~/dev/your-project your-project your-username your-project --conduct-contact=conduct@example.com --dry-run
 
 # 既存のファイルもテンプレートで上書きする（事前に git で差分を確認できる状態にしておく）
-bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/your-project ... --conduct-contact=conduct@example.com --force
+bash ~/templates/oss-docs/apply-templates.sh ~/dev/your-project your-project your-username your-project --conduct-contact=conduct@example.com --force
 git diff
 ```
 
@@ -153,7 +153,7 @@ git diff
 ```bash
 # まずテスト用ブランチで試す
 git checkout -b add-oss-docs
-bash ~/dev/templates/oss-docs/apply-templates.sh ...
+bash ~/templates/oss-docs/apply-templates.sh . your-project your-username your-project --conduct-contact=conduct@example.com
 
 # カスタマイズして確認
 git diff
@@ -186,7 +186,7 @@ EOF
 
 ```bash
 # テンプレートの最新版を確認
-cd ~/dev/templates/oss-docs
+cd ~/templates/oss-docs
 git pull
 
 # 変更があればテンプレートを更新
@@ -194,7 +194,7 @@ git pull
 
 # 既存プロジェクトに差分を反映（選択的に）
 cd ~/dev/your-project
-diff ~/dev/templates/oss-docs/lang-configs/node/CONTRIBUTING.md CONTRIBUTING.md
+diff ~/templates/oss-docs/lang-configs/node/CONTRIBUTING.md CONTRIBUTING.md
 ```
 
 ## チェックリスト

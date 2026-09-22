@@ -50,7 +50,7 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 | `--readme-lang=<en\|ja>` | Language of your main README (default: `en`). With `ja`, README.ja.md is not added and the Japanese Code of Conduct is used |
 | `--contact-email=<email>` / `--contact-handle=<handle>` | Optional extra contacts listed in SECURITY.md |
 | `--description-ja=<text>` | Short Japanese description for README.ja.md |
-| `--update-actions` | Replace managed GitHub Actions workflows (the previous files are kept as backups) |
+| `--update-actions` | With `--lang=node` only: replace an existing `.github/workflows/ci.yml` (the previous file is kept as `ci.yml.pre-cost-optimization`) and, when those files exist, rename `lint.yml` to `lint.yml.disabled` and `release.yml` to `release.yml.disabled`. Existing workflows for go, swift, shell, and python are not replaced; without `--force` they are skipped |
 | `--force` | Overwrite files that already exist. **By default, existing files are kept** |
 | `--dry-run` | Show what would be created, overwritten, or skipped without writing anything |
 
@@ -66,14 +66,14 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 | **SECURITY.md** | Vulnerability reporting through GitHub private vulnerability reporting (extra contacts optional) | ⭐⭐ Medium |
 | **.github/CODEOWNERS** | Review owners for every pull request (`--code-owners`; use a team for organizations) | ⭐ Low |
 | **.github/dependabot.yml** | Weekly updates for GitHub Actions, plus the package ecosystem of `--lang` (npm, gomod, pip, swift) | ⭐ Low |
-| **.github/workflows/security.yml** | Secret scanning with the gitleaks CLI (pinned version and checksum) on every push/PR | ⭐ Low |
+| **.github/workflows/security.yml** | Secret scanning with the gitleaks CLI (pinned version and checksum) on push to `main` or `master`, and on pull requests targeting `main` or `master` | ⭐ Low |
 | **LICENSE** (with `--license=apache-2.0\|mit`) | License file with year/holder auto-filled (`--copyright-holder` to override) | ⭐ Low |
 
 ### Language-Specific Templates (Optional)
 
 | Language | Files Included | Linter/Formatter |
 |----------|----------------|------------------|
-| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json, package-lock.json, tsconfig.json, vitest.config.ts, .markdownlint.json, .yamllint.yml, .changeset/README.md, .github/workflows/ci.yml | markdownlint, yamllint, shellcheck, TypeScript, Vitest, changesets |
+| **Node.js** | CONTRIBUTING.md, TESTING.md, package.json (scripts: `lint`, `lint:md`, `lint:yaml`, `lint:sh` only), package-lock.json, tsconfig.json, vitest.config.ts, .markdownlint.json, .yamllint.yml, .changeset/README.md, .github/workflows/ci.yml | markdownlint, yamllint, shellcheck. Typecheck, Vitest, and changesets are not installed; add the dependencies and scripts yourself |
 | **Go** | CONTRIBUTING.md, TESTING.md, .golangci.yml | golangci-lint |
 | **Swift** | CONTRIBUTING.md, TESTING.md, .swiftlint.yml | SwiftLint |
 | **Shell** | CONTRIBUTING.md, TESTING.md, .shellcheckrc | shellcheck, shfmt, bats |
@@ -110,7 +110,11 @@ bash ~/templates/oss-docs/apply-templates.sh \
 
 cd ~/dev/my-cli
 npm ci
-npm run lint
+# Do not run `npm run lint` immediately after apply. It runs `lint:md` and `lint:sh`.
+# `lint:sh` is `find … | xargs -0 shellcheck` without `--no-run-if-empty`. With no
+# `*.sh` files, GNU xargs (Linux) still starts shellcheck, and the script fails.
+# The template does not add any shell scripts. Lint Markdown until you add some:
+npm run lint:md
 ```
 
 ### Go Project
@@ -120,6 +124,8 @@ bash ~/templates/oss-docs/apply-templates.sh \
   ~/dev/my-go-app my-go-app tackeyy my-go-app --lang=go \
   --conduct-contact=conduct@example.com
 
+# Existing Go module only. The template does not create go.mod.
+# `go mod download` and `golangci-lint run` fail when go.mod is absent.
 cd ~/dev/my-go-app
 go mod download
 golangci-lint run
@@ -155,6 +161,8 @@ bash ~/templates/oss-docs/apply-templates.sh \
   ~/dev/my-scripts my-scripts tackeyy my-scripts --lang=shell \
   --conduct-contact=conduct@example.com
 
+# The template does not add any `*.sh` files.
+# `shellcheck *.sh` fails when the project has no shell scripts; run it only after you add some.
 cd ~/dev/my-scripts
 shellcheck *.sh
 ```
@@ -199,13 +207,12 @@ After applying templates, review and customize:
 ## 🌍 Language Support Details
 
 ### Node.js (+ MCP SDK Support)
-- ✅ Linters: markdownlint, yamllint, shellcheck (lint steps run only when the matching npm script exists)
-- ✅ Test framework: Vitest (vitest.config.ts included)
-- ✅ Package manager: npm (`npm ci` with a committed package-lock.json)
-- ✅ Runtime: Node.js 24 LTS + npm 11
-- ✅ TypeScript: tsconfig.json for Node 24 + ESM + NodeNext (compatible with `@modelcontextprotocol/sdk`)
-- ✅ CI workflow: typecheck + lint + test + build (ci.yml)
-- ✅ Gated release job: changesets-based npm publish with [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC, no npm token). Runs after CI succeeds, only when a `release` script and `.changeset/config.json` exist and the package is not `"private": true` (ci.yml)
+- ✅ Generated `package.json` scripts are only `lint`, `lint:md`, `lint:yaml`, and `lint:sh`. The only devDependency is `markdownlint-cli2`. `lint` runs `lint:md` and `lint:sh`.
+- ✅ Copied config, not installed tools: `tsconfig.json` (Node 24, ESM, NodeNext, compatible with `@modelcontextprotocol/sdk`) and `vitest.config.ts`. `typescript` and `vitest` are not dependencies, and there is no `typecheck`, `test`, or `build` script until you add them.
+- ✅ Package manager: npm (`npm ci` with the generated package-lock.json)
+- ✅ Runtime: Node.js 24 LTS + npm 11 (`engines.node` is `>=24`)
+- ✅ CI (`ci.yml`): `npm run typecheck`, `npm run lint:md`, `npm run lint:yaml`, `npm run test`, and `npm run build` all use `--if-present`. The generated package.json includes `lint:md` and `lint:yaml`, so those two run; `typecheck`, `test`, and `build` are skipped until you add the scripts. Shellcheck is not an npm script: the `ludeeus/action-shellcheck` step runs on every CI job, with or without a matching script.
+- ✅ Gated release job: changesets-based npm publish with [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC, no npm token). It runs only on a push to `main`, after the quality job succeeds, and only when `package.json` has a `release` script, `.changeset/config.json` exists, and the package is not `"private": true`. The generated package.json is `"private": true` and has no `release` script. The template copies `.changeset/README.md`, not `.changeset/config.json`.
 
 ### Go
 - ✅ Linter: golangci-lint (includes errcheck, gosimple, govet, staticcheck, etc.)

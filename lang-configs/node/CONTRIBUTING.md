@@ -57,13 +57,21 @@ npm install
 # 3. Set up environment variables if the project provides an example
 [ -f .env.example ] && cp .env.example .env
 
-# 4. Run tests to verify setup
+# 4. Lint Markdown. The generated package.json scripts are only
+#    lint, lint:md, lint:yaml, and lint:sh. The only devDependency is markdownlint-cli2.
+#    `npm run lint` also runs lint:sh (`find | xargs -0 shellcheck` without --no-run-if-empty).
+#    With no *.sh files, GNU xargs on Linux starts shellcheck with no arguments and lint fails.
+npm run lint:md
+```
+
+The template does not add `typecheck`, `test`, `build`, or `release` scripts, and it does not install TypeScript, Vitest, or changesets. `tsconfig.json` and `vitest.config.ts` are only starter config. In CI, `npm run typecheck`, `npm run lint:md`, `npm run lint:yaml`, `npm run test`, and `npm run build` use `--if-present`: `lint:md` and `lint:yaml` run because those scripts are generated; `typecheck`, `test`, and `build` are skipped until you add them. Shellcheck in CI is `ludeeus/action-shellcheck` and runs on every CI job, not via an npm script.
+
+After you add the missing scripts and dependencies, the setup commands are:
+
+```bash
+npm run typecheck
 npm test
-
-# 5. Build the project
 npm run build
-
-# 6. Test the project locally using its documented command
 npm start -- --help
 ```
 
@@ -71,7 +79,7 @@ npm start -- --help
 
 ### TypeScript Style
 
-- Use **strict TypeScript mode** (already configured)
+- Use **strict TypeScript mode** (set in the copied `tsconfig.json`; the `typescript` package is not installed until you add it)
 - Prefer `const` over `let`, avoid `var`
 - Use descriptive variable names (`meetingId` not `id`)
 - Avoid `any` type - use `unknown` if needed
@@ -119,8 +127,10 @@ chore: update dependencies to latest versions
 
 ### Running Tests
 
+`npm test` works after you add a `test` script. The generated `package.json` does not include one. CI calls `npm run test --if-present`, so the step is skipped until that script exists.
+
 ```bash
-# Run all tests
+# Run all tests (after you add the script)
 npm test
 
 # Run tests in watch mode (during development)
@@ -165,6 +175,7 @@ git checkout -b fix/your-bug-fix
 #### 3. Ensure quality
 
 ```bash
+# These scripts are not in the generated package.json. Add them, then:
 npm test          # All tests must pass
 npm run build     # Build must succeed
 ```
@@ -194,8 +205,8 @@ git push origin feat/your-feature-name
 
 Before submitting, ensure:
 
-- ✅ All tests pass (`npm test`)
-- ✅ Build succeeds (`npm run build`)
+- ✅ All tests pass (`npm test`, after you add the `test` script)
+- ✅ Build succeeds (`npm run build`, after you add the `build` script)
 - ✅ Code follows project style
 - ✅ Commit messages follow convention
 - ✅ Tests added for new functionality
