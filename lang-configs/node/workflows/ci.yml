@@ -50,7 +50,7 @@ jobs:
         run: npm run typecheck --if-present
 
       - name: Run Markdown lint
-        run: npm run lint:md
+        run: npm run lint:md --if-present
 
       - name: Setup Python for YAML lint
         uses: actions/setup-python@v6
@@ -61,7 +61,7 @@ jobs:
         run: pip install yamllint
 
       - name: Run YAML lint
-        run: npm run lint:yaml
+        run: npm run lint:yaml --if-present
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master

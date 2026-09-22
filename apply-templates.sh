@@ -370,6 +370,12 @@ if [ -n "$LANGUAGE" ]; then
           fi
         else
           echo "- skip (exists): package.json"
+          # 生成する ci.yml は lint 用 script を --if-present で呼ぶため、無ければ CI で黙ってスキップされる
+          for lint_script in lint:md lint:yaml; do
+            if ! grep -Fq "\"$lint_script\"" "$TARGET_DIR/package.json"; then
+              echo -e "${YELLOW}⚠ package.json has no \"$lint_script\" script; CI will skip it until you add one${NC}"
+            fi
+          done
           if [ ! -f "$TARGET_DIR/package-lock.json" ]; then
             echo -e "${YELLOW}⚠ package-lock.json is required by ci.yml; run npm install and commit it${NC}"
           fi
