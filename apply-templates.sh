@@ -320,6 +320,11 @@ if [ "$README_LANG" = "en" ] && [ -f "$SCRIPT_DIR/base/README.ja.md.template" ];
   install_file "$SCRIPT_DIR/base/README.ja.md.template" "$TARGET_DIR/README.ja.md" --placeholders
 fi
 
+# SECURITY.md を今回書くか（既存を保持する・dry-run のときは書かない）。書いたときだけ窓口の有効化を案内する
+SECURITY_WRITTEN=false
+if [ "$DRY_RUN" != true ] && { [ ! -e "$TARGET_DIR/SECURITY.md" ] || [ "$FORCE" = true ]; }; then
+  SECURITY_WRITTEN=true
+fi
 if [ -f "$SCRIPT_DIR/base/SECURITY.md.template" ]; then
   install_file "$SCRIPT_DIR/base/SECURITY.md.template" "$TARGET_DIR/SECURITY.md" --placeholders
 fi
@@ -419,8 +424,12 @@ if [ -n "$LANGUAGE" ]; then
 fi
 
 echo ""
-echo -e "${YELLOW}⚠ SECURITY.md points reporters to GitHub private vulnerability reporting.${NC}"
-echo "  Enable it in the repository: Settings > Security > Private vulnerability reporting"
+if [ "$SECURITY_WRITTEN" = true ]; then
+  echo -e "${YELLOW}⚠ SECURITY.md points reporters to GitHub private vulnerability reporting.${NC}"
+  echo "  Enable it in the repository: Settings > Security > Private vulnerability reporting"
+elif [ "$DRY_RUN" != true ]; then
+  echo -e "${YELLOW}⚠ SECURITY.md was kept (not generated). Check that it points reporters to a private channel, such as GitHub private vulnerability reporting.${NC}"
+fi
 echo ""
 if [ "$DRY_RUN" = true ]; then
   echo -e "${GREEN}Dry run complete: no files were written${NC}"
@@ -438,7 +447,7 @@ if [ -n "$LANGUAGE" ]; then
       echo "3. Run type check: npm run typecheck"
       echo "4. Run tests: npm test"
       echo "5. Review and customize CONTRIBUTING.md"
-      echo "6. Review SECURITY.md contact information"
+      echo "6. Enable private vulnerability reporting (Settings > Security) for the link in SECURITY.md"
       echo "7. To enable release: add a release script, .changeset/config.json, and the NPM_TOKEN secret"
       ;;
     go)

@@ -39,4 +39,15 @@ grep -Fq "security@acme.test" "$sec" || fail "--contact-email must be listed"
 grep -Fq "https://x.com/acme_sec" "$sec" || fail "--contact-handle must be listed"
 grep -Fq "https://github.com/acme/demo-repo/security/advisories/new" "$sec" || fail "private vulnerability reporting must remain the primary channel"
 
+# 3) SECURITY.md を書かなかった場合（既存を保持・dry-run）は、書いたかのような案内を出さない
+t="$TEST_ROOT/kept"
+mkdir -p "$t"
+printf 'OUR POLICY\n' >"$t/SECURITY.md"
+out="$(bash "$APPLY" "$t" demo acme demo-repo --conduct-contact=conduct@example.org 2>&1)"
+! echo "$out" | grep -Fq "SECURITY.md points reporters" || fail "must not claim that a kept SECURITY.md points to private vulnerability reporting"
+echo "$out" | grep -F "⚠" | grep -Fq "SECURITY.md was kept" || fail "must tell that SECURITY.md was kept and should be checked"
+mkdir -p "$TEST_ROOT/dry2"
+out="$(bash "$APPLY" "$TEST_ROOT/dry2" demo acme demo-repo --conduct-contact=conduct@example.org --dry-run 2>&1)"
+! echo "$out" | grep -Fq "SECURITY.md points reporters" || fail "--dry-run must not claim that SECURITY.md was written"
+
 echo "All security policy tests passed."
