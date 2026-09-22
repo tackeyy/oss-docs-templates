@@ -65,12 +65,16 @@ def test_user_creation():
 ```python
 import pytest
 
-@pytest.mark.parametrize("email,expected", [
-    ("user@example.com", True),
-    ("invalid-email", False),
-    ("", False),
-    ("user@", False),
-])
+
+@pytest.mark.parametrize(
+    "email,expected",
+    [
+        ("user@example.com", True),
+        ("invalid-email", False),
+        ("", False),
+        ("user@", False),
+    ],
+)
 def test_email_validation(email, expected):
     result = validate_email(email)
     assert result == expected
@@ -81,9 +85,11 @@ def test_email_validation(email, expected):
 ```python
 import pytest
 
+
 @pytest.fixture
 def sample_user():
     return User(name="Test User", email="test@example.com")
+
 
 def test_user_display_name(sample_user):
     assert sample_user.display_name == "Test User"
@@ -128,6 +134,7 @@ def test_fetch_user_data(mocker):
 
 ```python
 from unittest.mock import Mock, patch
+
 
 def test_send_email():
     with patch("smtplib.SMTP") as mock_smtp:
@@ -244,6 +251,7 @@ Before submitting a PR, ensure:
 ```python
 import pytest
 
+
 @pytest.mark.integration
 def test_database_integration():
     # Integration test code
@@ -267,6 +275,7 @@ pytest -m "not integration"
 ```python
 import pytest
 
+
 @pytest.mark.asyncio
 async def test_async_function():
     result = await async_operation()
@@ -278,6 +287,7 @@ async def test_async_function():
 ```python
 from hypothesis import given
 import hypothesis.strategies as st
+
 
 @given(st.integers(), st.integers())
 def test_addition_commutative(a, b):
