@@ -19,6 +19,7 @@ Options:
   --license=<apache-2.0|mit>            Create LICENSE
   --copyright-holder=<name>             Copyright holder for LICENSE (default: repo owner)
   --conduct-contact=<email-or-url>      Where Code of Conduct reports go (required when CODE_OF_CONDUCT.md is written)
+  --code-owners="<@user @org/team ...>"  Owners in .github/CODEOWNERS (default: @repo-owner; use a team for organizations)
   --contact-handle=<handle>             Security contact handle (default: repo owner)
   --contact-email=<email>               Security contact email
   --description-ja=<text>               Short Japanese description for README.ja.md
@@ -42,6 +43,7 @@ CONTACT_HANDLE=""
 CONTACT_EMAIL=""
 PROJECT_DESCRIPTION_JA=""
 CONDUCT_CONTACT=""
+CODE_OWNERS=""
 UPDATE_ACTIONS=false
 FORCE=false
 DRY_RUN=false
@@ -55,6 +57,7 @@ for arg in "$@"; do
     --contact-email=*) CONTACT_EMAIL="${arg#*=}" ;;
     --description-ja=*) PROJECT_DESCRIPTION_JA="${arg#*=}" ;;
     --conduct-contact=*) CONDUCT_CONTACT="${arg#*=}" ;;
+    --code-owners=*) CODE_OWNERS="${arg#*=}" ;;
     --update-actions) UPDATE_ACTIONS=true ;;
     --force) FORCE=true ;;
     --dry-run) DRY_RUN=true ;;
@@ -124,6 +127,7 @@ CONTACT_EMAIL="${CONTACT_EMAIL:-security@example.com}"
 PROJECT_DESCRIPTION_JA="${PROJECT_DESCRIPTION_JA:-$PROJECT_NAME の説明をここに書いてください。}"
 PACKAGE_IMPORT_NAME="${REPO_NAME//-/_}"
 COPYRIGHT_HOLDER="${COPYRIGHT_HOLDER:-$REPO_OWNER}"
+CODE_OWNERS="${CODE_OWNERS:-@$REPO_OWNER}"
 YEAR="$(date +%Y)"
 
 # 言語ごとの値。base のテンプレートは言語に依存しないよう、これらを置換変数で受ける。
@@ -158,8 +162,6 @@ if [ -n "$PACKAGE_ECOSYSTEM" ]; then
         update-types:
           - \"minor\"
           - \"patch\"
-    reviewers:
-      - \"$REPO_OWNER\"
     labels:
       - \"dependencies\"
     commit-message:
@@ -179,6 +181,7 @@ replace_placeholders() {
   COPYRIGHT_HOLDER="$COPYRIGHT_HOLDER" \
   YEAR="$YEAR" \
   CONDUCT_CONTACT="$CONDUCT_CONTACT" \
+  CODE_OWNERS="$CODE_OWNERS" \
   TEST_COMMAND="$TEST_COMMAND" \
   DEPENDABOT_PACKAGE_BLOCK="$DEPENDABOT_PACKAGE_BLOCK" \
     perl -0pi -e '
@@ -192,6 +195,7 @@ replace_placeholders() {
       s/\{\{COPYRIGHT_HOLDER\}\}/$ENV{COPYRIGHT_HOLDER}/g;
       s/\{\{YEAR\}\}/$ENV{YEAR}/g;
       s/\{\{CONDUCT_CONTACT\}\}/$ENV{CONDUCT_CONTACT}/g;
+      s/\{\{CODE_OWNERS\}\}/$ENV{CODE_OWNERS}/g;
       s/\{\{TEST_COMMAND\}\}/$ENV{TEST_COMMAND}/g;
       s/\n?\{\{DEPENDABOT_PACKAGE_BLOCK\}\}/$ENV{DEPENDABOT_PACKAGE_BLOCK}/g;
     ' "$file"
