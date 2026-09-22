@@ -24,17 +24,13 @@ Closes #
 
 ### Test Coverage
 - [ ] Unit tests added/updated
-- [ ] All tests pass locally (`npm test`)
-- [ ] Build succeeds locally (`npm run build`)
+- [ ] All tests pass locally ({{TEST_COMMAND}})
+- [ ] Build succeeds locally (if the project has a build step)
 - [ ] Manual testing performed
 
 ### Test Evidence
+
 <!-- Paste test output or describe manual testing steps -->
-```bash
-# Example:
-$ npm test
-✓ All 160 tests passed
-```
 
 ## Checklist
 

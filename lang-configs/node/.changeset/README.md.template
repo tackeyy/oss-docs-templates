@@ -19,7 +19,7 @@ The changeset file will be committed with your changes.
 
 ## Release process
 
-Releases are automated via GitHub Actions (`release.yml`).
+Releases are automated by the `release` job in `.github/workflows/ci.yml`. The job runs only after the quality checks pass on `main`, and only when a `release` script and `.changeset/config.json` exist.
 
 When changesets are merged to `main`:
 1. A "Version Packages" PR is automatically created
