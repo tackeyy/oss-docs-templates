@@ -89,6 +89,9 @@ bash ~/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-python-a
 4. **SECURITY.md**
    - [ ] repo の Settings > Security で Private vulnerability reporting を有効にする
 
+5. **.github のラベル**
+   - [ ] Issue テンプレートが使うラベルは GitHub の既定（`bug` / `enhancement` / `question`）だけ。これ以外を書くときは、先にそのラベルを repo に作る
+
 ## 🆘 ヘルプ
 
 問題が発生したら:

@@ -1,3 +1,12 @@
+**Do not paste real data or tokens.** This repository is public.
+Do not include real credentials, tokens, or personal data.
+Redact them or replace them with dummy values.
+
+**Report vulnerabilities privately.** Please do not report security
+vulnerabilities through public GitHub issues, discussions, or pull requests.
+Use GitHub [Private vulnerability reporting](https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/security/advisories/new),
+as described in [SECURITY.md](https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/security/policy).
+
 ## Description
 
 <!-- Provide a brief summary of your changes -->

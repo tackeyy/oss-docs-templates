@@ -165,6 +165,9 @@ case "$LANGUAGE" in
   *) TEST_COMMAND="the project's test command"; PACKAGE_ECOSYSTEM="" ;;
 esac
 
+# labels は入れない。明示したラベルが repo に無いと Dependabot は無視し、自分では作らない。
+# 省略すると dependencies と ecosystem の既定ラベルが作られる（dependabot.yml.template のコメントと同じ）。
+# major は minor / patch と分け、初回にパッケージごとの PR が並ばないようにする。
 DEPENDABOT_PACKAGE_BLOCK=""
 if [ -n "$PACKAGE_ECOSYSTEM" ]; then
   DEPENDABOT_PACKAGE_BLOCK="
@@ -185,8 +188,12 @@ if [ -n "$PACKAGE_ECOSYSTEM" ]; then
         update-types:
           - \"minor\"
           - \"patch\"
-    labels:
-      - \"dependencies\"
+      # Keep breaking updates in one pull request per ecosystem, separate from minor and patch.
+      major:
+        patterns:
+          - \"*\"
+        update-types:
+          - \"major\"
     commit-message:
       prefix: \"chore\"
       include: \"scope\""
@@ -315,7 +322,8 @@ if [ "$README_LANG" = "ja" ]; then
 fi
 install_file "$CODE_OF_CONDUCT_SOURCE" "$TARGET_DIR/CODE_OF_CONDUCT.md" --placeholders
 
-# .github templates (raw *.template files are rendered separately below)
+# .github templates (raw *.template files are rendered separately below).
+# ISSUE_TEMPLATE/config.yml is included here because it is not a *.template file.
 while IFS= read -r template_file; do
   install_file "$template_file" "$TARGET_DIR/.github/${template_file#"$SCRIPT_DIR/base/.github/"}" --placeholders
 done < <(find "$SCRIPT_DIR/base/.github" -type f ! -name "*.template" | sort)
