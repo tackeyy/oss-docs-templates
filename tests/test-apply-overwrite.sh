@@ -85,4 +85,30 @@ echo "$out" | grep -Fq "overwrite: CONTRIBUTING.md" || fail "--force must report
 [ -f "$t/.github/own.yml.template" ] || fail "--force must not delete user's own .template file"
 grep -Fq '{{PROJECT_NAME}}' "$t/.github/workflows/own.yml" || fail "--force must not touch files the templates do not provide"
 
+# 4) --force は Node の package.json / package-lock.json にも効く
+t="$TEST_ROOT/node-force"
+mkdir -p "$t"
+printf '{"name": "ORIGINAL"}\n' >"$t/package.json"
+bash "$APPLY" "$t" p owner repo --lang=node >/dev/null 2>&1
+grep -Fq '"name": "ORIGINAL"' "$t/package.json" || fail "existing package.json must be kept without --force"
+[ ! -e "$t/package-lock.json" ] || fail "package-lock.json must not be created next to a kept package.json"
+bash "$APPLY" "$t" p owner repo --lang=node --force >/dev/null 2>&1
+! grep -Fq '"name": "ORIGINAL"' "$t/package.json" || fail "--force must overwrite package.json"
+grep -Fq '"lint:md"' "$t/package.json" || fail "--force must write the template package.json"
+[ -f "$t/package-lock.json" ] || fail "--force must write package-lock.json with the template package.json"
+
+# 5) --dry-run --update-actions は、動かしていない退避を完了と表示しない
+t="$TEST_ROOT/dry-update-actions"
+mkdir -p "$t/.github/workflows"
+printf 'legacy-ci\n' >"$t/.github/workflows/ci.yml"
+printf 'legacy-lint\n' >"$t/.github/workflows/lint.yml"
+printf 'legacy-release\n' >"$t/.github/workflows/release.yml"
+before="$(cd "$t" && find . -type f -exec shasum {} + | sort)"
+out="$(bash "$APPLY" "$t" p owner repo --lang=node --update-actions --dry-run 2>&1)"
+after="$(cd "$t" && find . -type f -exec shasum {} + | sort)"
+[ "$before" = "$after" ] || fail "--dry-run --update-actions must not change any file"
+! echo "$out" | grep -Fq "✓" || fail "--dry-run must not report completed actions (✓): $(echo "$out" | grep -F "✓")"
+echo "$out" | grep -Fq "would run: mv" || fail "--dry-run must show the planned move of legacy workflows"
+! echo "$out" | grep -Fq "applied successfully" || fail "--dry-run must not claim that templates were applied"
+
 echo "All overwrite tests passed."

@@ -18,22 +18,22 @@ bash ~/dev/templates/oss-docs/apply-templates.sh \
   --lang=node
 ```
 
-**実行結果:**
+**実行結果（抜粋）:**
 ```
 Applying OSS documentation templates...
 Target: /Users/username/dev/awesome-cli
 Project: awesome-cli
 Repository: your-username/awesome-cli
 
-✓ CODE_OF_CONDUCT.md copied
-✓ README.ja.md template copied (customize description and content)
-✓ SECURITY.md template copied and customized
-✓ CONTRIBUTING.md copied and customized
-✓ docs/TESTING.md copied and customized
-✓ .github templates copied and customized
+Copying base templates...
+✓ create: CODE_OF_CONDUCT.md
+✓ create: .github/PULL_REQUEST_TEMPLATE.md
+✓ create: SECURITY.md
 
 ✅ Templates applied successfully!
 ```
+
+既存のファイルは上書きせず `- skip (exists): <path>` と表示します。
 
 ### 例2: 既存プロジェクトに適用
 
@@ -125,18 +125,17 @@ bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/new-project new-project o
 chmod +x ~/dev/templates/oss-docs/apply-templates.sh
 ```
 
-### 既存のファイルを上書きしたくない
+### 既存のファイルを上書きしたくない / 上書きしたい
+
+既存のファイルは既定で上書きしません。`- skip (exists): <path>` と表示されたものは、元の内容のまま残っています。
 
 ```bash
-# バックアップを作成
-cd ~/dev/your-project
-cp CONTRIBUTING.md CONTRIBUTING.md.backup
+# 何が作成・上書き・スキップされるかを、書き込まずに確認する
+bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/your-project ... --dry-run
 
-# テンプレートを適用
-bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/your-project ...
-
-# 差分を確認してマージ
-diff CONTRIBUTING.md.backup CONTRIBUTING.md
+# 既存のファイルもテンプレートで上書きする（事前に git で差分を確認できる状態にしておく）
+bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/your-project ... --force
+git diff
 ```
 
 ## ベストプラクティス

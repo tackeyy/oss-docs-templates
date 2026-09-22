@@ -1,6 +1,6 @@
 #!/bin/bash
 # OSS Documentation Templates - Apply Script
-# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--update-actions] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
+# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--update-actions] [--force] [--dry-run] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
 
 set -euo pipefail
 
@@ -242,15 +242,18 @@ if [ -n "$LANGUAGE" ]; then
 
   case $LANGUAGE in
     node)
-      if [ ! -f "$TARGET_DIR/package.json" ] && [ -f "$LANG_DIR/package.json" ]; then
-        install_file "$LANG_DIR/package.json" "$TARGET_DIR/package.json" --placeholders
-        if [ -f "$LANG_DIR/package-lock.json.template" ]; then
-          install_file "$LANG_DIR/package-lock.json.template" "$TARGET_DIR/package-lock.json" --placeholders
-        fi
-      elif [ -f "$TARGET_DIR/package.json" ]; then
-        echo "- skip (exists): package.json"
-        if [ ! -f "$TARGET_DIR/package-lock.json" ]; then
-          echo -e "${YELLOW}⚠ package-lock.json is required by ci.yml; run npm install and commit it${NC}"
+      if [ -f "$LANG_DIR/package.json" ]; then
+        # package-lock.json はテンプレートの package.json と対なので、package.json を書くときだけ書く
+        if [ ! -e "$TARGET_DIR/package.json" ] || [ "$FORCE" = true ]; then
+          install_file "$LANG_DIR/package.json" "$TARGET_DIR/package.json" --placeholders
+          if [ -f "$LANG_DIR/package-lock.json.template" ]; then
+            install_file "$LANG_DIR/package-lock.json.template" "$TARGET_DIR/package-lock.json" --placeholders
+          fi
+        else
+          echo "- skip (exists): package.json"
+          if [ ! -f "$TARGET_DIR/package-lock.json" ]; then
+            echo -e "${YELLOW}⚠ package-lock.json is required by ci.yml; run npm install and commit it${NC}"
+          fi
         fi
       fi
       for config in .markdownlint.json .yamllint.yml tsconfig.json vitest.config.ts; do
@@ -280,7 +283,7 @@ if [ -n "$LANGUAGE" ]; then
     install_file "$LANG_DIR/workflows/lint.yml" "$WORKFLOWS/lint.yml" --placeholders
   elif [ "$LANGUAGE" = "node" ] && [ "$UPDATE_ACTIONS" = true ] && [ -f "$WORKFLOWS/lint.yml" ]; then
     run_or_report mv "$WORKFLOWS/lint.yml" "$WORKFLOWS/lint.yml.disabled"
-    echo "✓ Legacy lint.yml disabled (backup: lint.yml.disabled)"
+    [ "$DRY_RUN" = true ] || echo "✓ Legacy lint.yml disabled (backup: lint.yml.disabled)"
   fi
 
   # ci.yml（--update-actions は管理対象 workflow の明示的な差し替え指示なので、退避してから上書きする）
@@ -288,7 +291,7 @@ if [ -n "$LANGUAGE" ]; then
     if [ "$UPDATE_ACTIONS" = true ] && [ -f "$WORKFLOWS/ci.yml" ]; then
       run_or_report cp "$WORKFLOWS/ci.yml" "$WORKFLOWS/ci.yml.pre-cost-optimization"
       run_or_report cp "$LANG_DIR/workflows/ci.yml" "$WORKFLOWS/ci.yml"
-      echo "✓ ci.yml replaced (backup: ci.yml.pre-cost-optimization)"
+      [ "$DRY_RUN" = true ] || echo "✓ ci.yml replaced (backup: ci.yml.pre-cost-optimization)"
     else
       install_file "$LANG_DIR/workflows/ci.yml" "$WORKFLOWS/ci.yml"
     fi
@@ -299,12 +302,16 @@ if [ -n "$LANGUAGE" ]; then
     install_file "$LANG_DIR/workflows/release.yml" "$WORKFLOWS/release.yml"
   elif [ "$LANGUAGE" = "node" ] && [ "$UPDATE_ACTIONS" = true ] && [ -f "$WORKFLOWS/release.yml" ]; then
     run_or_report mv "$WORKFLOWS/release.yml" "$WORKFLOWS/release.yml.disabled"
-    echo "✓ Legacy release.yml disabled (release is gated by ci.yml; backup: release.yml.disabled)"
+    [ "$DRY_RUN" = true ] || echo "✓ Legacy release.yml disabled (release is gated by ci.yml; backup: release.yml.disabled)"
   fi
 fi
 
 echo ""
-echo -e "${GREEN}✅ Templates applied successfully!${NC}"
+if [ "$DRY_RUN" = true ]; then
+  echo -e "${GREEN}Dry run complete: no files were written${NC}"
+else
+  echo -e "${GREEN}✅ Templates applied successfully!${NC}"
+fi
 echo ""
 
 if [ -n "$LANGUAGE" ]; then
