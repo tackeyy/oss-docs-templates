@@ -370,8 +370,21 @@ if [ -n "$LANGUAGE" ]; then
           fi
         else
           echo "- skip (exists): package.json"
-          if [ ! -f "$TARGET_DIR/package-lock.json" ]; then
-            echo -e "${YELLOW}⚠ package-lock.json is required by ci.yml; run npm install and commit it${NC}"
+          # 以下の警告は、テンプレートの ci.yml を今回書く場合だけ意味を持つ（既存の ci.yml を残すならそれが動く）
+          ci_written=false
+          if [ ! -e "$TARGET_DIR/.github/workflows/ci.yml" ] || [ "$UPDATE_ACTIONS" = true ] || [ "$FORCE" = true ]; then
+            ci_written=true
+          fi
+          if [ "$ci_written" = true ]; then
+            # 生成する ci.yml は lint 用 script を --if-present で呼ぶため、無ければ CI で黙ってスキップされる
+            for lint_script in lint:md lint:yaml; do
+              if ! grep -Fq "\"$lint_script\"" "$TARGET_DIR/package.json"; then
+                echo -e "${YELLOW}⚠ package.json has no \"$lint_script\" script; CI will skip it until you add one${NC}"
+              fi
+            done
+            if [ ! -f "$TARGET_DIR/package-lock.json" ]; then
+              echo -e "${YELLOW}⚠ package-lock.json is required by ci.yml; run npm install and commit it${NC}"
+            fi
           fi
         fi
       fi
