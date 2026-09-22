@@ -308,7 +308,12 @@ fi
 # Copy base templates (language-independent)
 echo -e "${YELLOW}Copying base templates...${NC}"
 
-install_file "$SCRIPT_DIR/base/CODE_OF_CONDUCT.md" "$TARGET_DIR/CODE_OF_CONDUCT.md" --placeholders
+# 行動規範は README の主言語に合わせる（Contributor Covenant 3.0 の公式訳）
+CODE_OF_CONDUCT_SOURCE="$SCRIPT_DIR/base/CODE_OF_CONDUCT.md"
+if [ "$README_LANG" = "ja" ]; then
+  CODE_OF_CONDUCT_SOURCE="$SCRIPT_DIR/base/CODE_OF_CONDUCT.ja.md"
+fi
+install_file "$CODE_OF_CONDUCT_SOURCE" "$TARGET_DIR/CODE_OF_CONDUCT.md" --placeholders
 
 # .github templates (raw *.template files are rendered separately below)
 while IFS= read -r template_file; do
