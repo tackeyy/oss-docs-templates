@@ -82,6 +82,9 @@ bash ~/dev/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-pyth
 3. **CODE_OF_CONDUCT.md**
    - [ ] 報告先（`--conduct-contact` で指定した値）
 
+4. **SECURITY.md**
+   - [ ] repo の Settings > Security で Private vulnerability reporting を有効にする
+
 ## 🆘 ヘルプ
 
 問題が発生したら:

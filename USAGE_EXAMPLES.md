@@ -25,16 +25,22 @@ Applying OSS documentation templates...
 Target: /Users/username/dev/awesome-cli
 Project: awesome-cli
 Repository: your-username/awesome-cli
+Security reports: https://github.com/your-username/awesome-cli/security/advisories/new
 
 Copying base templates...
 ✓ create: CODE_OF_CONDUCT.md
+✓ create: .github/CODEOWNERS
 ✓ create: .github/PULL_REQUEST_TEMPLATE.md
 ✓ create: SECURITY.md
+✓ create: .github/dependabot.yml
+
+⚠ SECURITY.md points reporters to GitHub private vulnerability reporting.
+  Enable it in the repository: Settings > Security > Private vulnerability reporting
 
 ✅ Templates applied successfully!
 ```
 
-既存のファイルは上書きせず `- skip (exists): <path>` と表示します。
+既存のファイルは上書きせず `- skip (exists): <path>` と表示します。上書きするには `--force` を付けます。事前に確認したいときは `--dry-run` を付けると、何も書き込まずに予定だけを表示します。
 
 ### 例2: 既存プロジェクトに適用
 

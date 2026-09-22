@@ -38,6 +38,22 @@ bash ~/templates/oss-docs/apply-templates.sh \
 
 See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--conduct-contact=<email-or-url>` | Where Code of Conduct reports go. **Required** when CODE_OF_CONDUCT.md is written |
+| `--lang=<node\|go\|swift\|shell\|python>` | Add language-specific templates |
+| `--license=<apache-2.0\|mit>` | Create LICENSE (also sets `license` in the Node package.json) |
+| `--copyright-holder=<name>` | Copyright holder for LICENSE (default: repo owner) |
+| `--code-owners="<@user @org/team ...>"` | Owners in `.github/CODEOWNERS` (default: `@<repo-owner>`) |
+| `--readme-lang=<en\|ja>` | Language of your main README (default: `en`). With `ja`, README.ja.md is not added and the Japanese Code of Conduct is used |
+| `--contact-email=<email>` / `--contact-handle=<handle>` | Optional extra contacts listed in SECURITY.md |
+| `--description-ja=<text>` | Short Japanese description for README.ja.md |
+| `--update-actions` | Replace managed GitHub Actions workflows (the previous files are kept as backups) |
+| `--force` | Overwrite files that already exist. **By default, existing files are kept** |
+| `--dry-run` | Show what would be created, overwritten, or skipped without writing anything |
+
 ## 📦 What's Included
 
 ### Base Templates (Always Applied)
@@ -47,9 +63,10 @@ See [QUICK_START.md](QUICK_START.md) for detailed instructions.
 | **CODE_OF_CONDUCT.md** | Community standards (Contributor Covenant 3.0; Japanese translation with `--readme-lang=ja`) | ⭐ Low |
 | **.github/ISSUE_TEMPLATE/** | Bug report, feature request, question templates | ⭐⭐ Medium |
 | **.github/PULL_REQUEST_TEMPLATE.md** | PR checklist and guidelines | ⭐⭐ Medium |
-| **SECURITY.md** | Vulnerability reporting policy and response process | ⭐⭐ Medium |
+| **SECURITY.md** | Vulnerability reporting through GitHub private vulnerability reporting (extra contacts optional) | ⭐⭐ Medium |
+| **.github/CODEOWNERS** | Review owners for every pull request (`--code-owners`; use a team for organizations) | ⭐ Low |
 | **.github/dependabot.yml** | Weekly updates for GitHub Actions, plus the package ecosystem of `--lang` (npm, gomod, pip, swift) | ⭐ Low |
-| **.github/workflows/security.yml** | Secret scanning with gitleaks on every push/PR | ⭐ Low |
+| **.github/workflows/security.yml** | Secret scanning with the gitleaks CLI (pinned version and checksum) on every push/PR | ⭐ Low |
 | **LICENSE** (with `--license=apache-2.0\|mit`) | License file with year/holder auto-filled (`--copyright-holder` to override) | ⭐ Low |
 
 ### Language-Specific Templates (Optional)
@@ -80,6 +97,7 @@ All language configs include GitHub Actions workflow for automated linting on PR
 - **Cost-efficient CI** - Consolidated jobs, dependency caching, short-lived failure artifacts, and grouped dependency updates
 - **Industry standards** - Based on GitHub CLI, AWS CLI, Contributor Covenant
 - **Explicit reporting contacts** - The Code of Conduct reporting contact is required (`--conduct-contact`); nothing personal is filled in by default
+- **Safe on existing repositories** - Existing files are kept unless you pass `--force`; `--dry-run` shows the plan first
 
 ## 🎯 Use Cases
 
@@ -145,7 +163,7 @@ shellcheck *.sh
 
 The `apply-templates.sh` script:
 
-1. **Copies base templates** - CODE_OF_CONDUCT.md and .github templates (language-independent)
+1. **Copies base templates** - CODE_OF_CONDUCT.md, SECURITY.md and .github templates (language-independent). Files that already exist are skipped unless `--force` is given
 2. **Copies language-specific files** (if --lang specified):
    - CONTRIBUTING.md tailored for the language
    - TESTING.md with language-specific test framework docs
@@ -167,10 +185,12 @@ After applying templates, review and customize:
   - [ ] Test execution commands
   - [ ] Coverage requirements
 - [ ] **CODE_OF_CONDUCT.md**
-  - [ ] Contact information
+  - [ ] Reporting contact (`--conduct-contact`)
 - [ ] **SECURITY.md**
   - [ ] Enable private vulnerability reporting (Settings > Security)
   - [ ] Optional extra contacts (`--contact-email` / `--contact-handle`)
+- [ ] **.github/CODEOWNERS**
+  - [ ] Owners (organizations need a team such as `@org/maintainers`)
 - [ ] **.github templates**
   - [ ] Issue labels (if different from defaults)
   - [ ] PR checklist items
@@ -179,13 +199,13 @@ After applying templates, review and customize:
 ## 🌍 Language Support Details
 
 ### Node.js (+ MCP SDK Support)
-- ✅ Linters: markdownlint, yamllint, shellcheck, eslint (optional)
-- ✅ Test framework: Jest/Vitest (vitest.config.ts included)
-- ✅ Package manager: npm/yarn/pnpm
+- ✅ Linters: markdownlint, yamllint, shellcheck (lint steps run only when the matching npm script exists)
+- ✅ Test framework: Vitest (vitest.config.ts included)
+- ✅ Package manager: npm (`npm ci` with a committed package-lock.json)
 - ✅ Runtime: Node.js 24 LTS + npm 11
 - ✅ TypeScript: tsconfig.json for Node 24 + ESM + NodeNext (compatible with `@modelcontextprotocol/sdk`)
 - ✅ CI workflow: typecheck + lint + test + build (ci.yml)
-- ✅ Gated release job: changesets-based npm publish after CI succeeds and release configuration is present (ci.yml)
+- ✅ Gated release job: changesets-based npm publish with [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC, no npm token). Runs after CI succeeds, only when a `release` script and `.changeset/config.json` exist and the package is not `"private": true` (ci.yml)
 
 ### Go
 - ✅ Linter: golangci-lint (includes errcheck, gosimple, govet, staticcheck, etc.)
