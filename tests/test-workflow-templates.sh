@@ -32,6 +32,17 @@ assert_not_contains() {
   ! grep -Fq -- "$pattern" "$file" || fail "$file unexpectedly contains: $pattern"
 }
 
+parse_yaml() {
+  local file="$1"
+  if python3 -c 'import yaml' 2>/dev/null; then
+    python3 -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1]))' "$file"
+  elif command -v ruby >/dev/null 2>&1; then
+    ruby -ryaml -e 'YAML.safe_load(File.read(ARGV[0]), aliases: true)' "$file"
+  else
+    fail "no YAML parser (python3 yaml or ruby) is available"
+  fi
+}
+
 assert_job_count() {
   local file="$1"
   local expected="$2"
@@ -129,9 +140,23 @@ swift_lint="$TEST_ROOT/swift/.github/workflows/lint.yml"
 assert_job_count "$swift_lint" 1
 assert_contains "$swift_lint" "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
 assert_contains "$swift_lint" "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0"
-assert_contains "$swift_lint" "norio-nomura/action-swiftlint"
+assert_contains "$swift_lint" "runs-on: macos-latest"
+assert_contains "$swift_lint" "xcodebuild -version"
+assert_contains "$swift_lint" "brew install swiftlint"
+assert_contains "$swift_lint" "swiftlint"
 assert_contains "$swift_lint" "swift test --enable-code-coverage"
+assert_contains "$swift_lint" "swift build --show-bin-path"
+assert_contains "$swift_lint" "*PackageTests.xctest"
+assert_contains "$swift_lint" "no *PackageTests.xctest bundle"
 assert_contains "$swift_lint" "codecov/codecov-action"
+assert_not_contains "$swift_lint" "Xcode_"
+assert_not_contains "$swift_lint" "xcode-15"
+assert_not_contains "$swift_lint" "xcode-select"
+assert_not_contains "$swift_lint" "norio-nomura/action-swiftlint"
+assert_not_contains "$swift_lint" "docker://"
+assert_not_contains "$swift_lint" "{{REPO_NAME}}PackageTests"
+assert_not_contains "$swift_lint" "test-swiftPackageTests"
+parse_yaml "$swift_lint" >/dev/null 2>&1 || fail "swift lint.yml is not valid YAML"
 
 dependabot="$TEST_ROOT/node/.github/dependabot.yml"
 assert_contains "$dependabot" "minor-and-patch"

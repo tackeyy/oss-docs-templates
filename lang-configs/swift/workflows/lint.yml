@@ -25,28 +25,66 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.0.app
+      - name: Resolve Xcode version
+        id: xcode
+        run: |
+          version="$(xcodebuild -version | awk 'NR==1 { print $2 }')"
+          if [ -z "$version" ]; then
+            echo "error: could not read the Xcode version from xcodebuild -version" >&2
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Cache Swift build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .build
-          key: ${{ runner.os }}-xcode-15-spm-${{ hashFiles('Package.resolved') }}
+          key: ${{ runner.os }}-xcode-${{ steps.xcode.outputs.version }}-spm-${{ hashFiles('Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-xcode-15-spm-
+            ${{ runner.os }}-xcode-${{ steps.xcode.outputs.version }}-spm-
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
 
       - name: SwiftLint
-        uses: norio-nomura/action-swiftlint@9f4dcd7fd46b4e75d7935cf2f4df406d5cae3684 # 3.2.1
+        run: swiftlint
 
       - name: Build and Test
         run: swift test --enable-code-coverage
 
       - name: Generate coverage report
         run: |
+          bin_path="$(swift build --show-bin-path)"
+          if [ -z "$bin_path" ] || [ ! -d "$bin_path" ]; then
+            echo "error: swift build --show-bin-path did not return a directory (got: '${bin_path:-}')" >&2
+            exit 1
+          fi
+          matches="$(find "$bin_path" -type d -name '*PackageTests.xctest' | sort)"
+          xctest_count="$(printf '%s\n' "$matches" | grep -c . || true)"
+          if [ "$xctest_count" -eq 0 ]; then
+            echo "error: no *PackageTests.xctest bundle under ${bin_path}" >&2
+            exit 1
+          fi
+          if [ "$xctest_count" -ne 1 ]; then
+            echo "error: expected one *PackageTests.xctest bundle under ${bin_path}, found ${xctest_count}:" >&2
+            printf '%s\n' "$matches" >&2
+            exit 1
+          fi
+          xctest="$matches"
+          bundle_name="$(basename "$xctest" .xctest)"
+          test_binary="${xctest}/Contents/MacOS/${bundle_name}"
+          if [ ! -f "$test_binary" ]; then
+            echo "error: test executable not found: ${test_binary}" >&2
+            exit 1
+          fi
+          profdata="${bin_path}/codecov/default.profdata"
+          if [ ! -f "$profdata" ]; then
+            echo "error: coverage profile not found: ${profdata}" >&2
+            exit 1
+          fi
           xcrun llvm-cov export -format="lcov" \
-            .build/debug/{{REPO_NAME}}PackageTests.xctest/Contents/MacOS/{{REPO_NAME}}PackageTests \
-            -instr-profile .build/debug/codecov/default.profdata > coverage.lcov
+            "$test_binary" \
+            -instr-profile "$profdata" > coverage.lcov
 
       - name: Upload coverage
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
