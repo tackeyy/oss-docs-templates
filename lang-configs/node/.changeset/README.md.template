@@ -19,7 +19,13 @@ The changeset file will be committed with your changes.
 
 ## Release process
 
-Releases are automated by the `release` job in `.github/workflows/ci.yml`. The job runs only after the quality checks pass on `main`, and only when a `release` script and `.changeset/config.json` exist.
+Releases are automated by the `release` job in `.github/workflows/ci.yml`. The job runs only after the quality checks pass on `main`, and only when all of the following hold:
+
+- `package.json` has a `release` script
+- `package.json` does not set `"private": true` (the generated `package.json` sets it, so change it to `false` before publishing)
+- `.changeset/config.json` exists
+
+Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC) instead of a long-lived token. Before the first release, register this repository and the `.github/workflows/ci.yml` workflow as a trusted publisher on npmjs.com. Until it is registered, the publish step fails with an authentication error.
 
 When changesets are merged to `main`:
 1. A "chore: version packages" PR is automatically created
