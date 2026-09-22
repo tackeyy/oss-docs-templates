@@ -1,6 +1,6 @@
 #!/bin/bash
 # OSS Documentation Templates - Apply Script
-# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> --conduct-contact=<email-or-url> [--lang=<language>] [--update-actions] [--force] [--dry-run] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
+# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> --conduct-contact=<email-or-url> [--readme-lang=<en|ja>] [--code-owners="<owners>"] [--lang=<language>] [--update-actions] [--force] [--dry-run] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
 
 set -euo pipefail
 
@@ -22,6 +22,7 @@ Options:
   --code-owners="<@user @org/team ...>"  Owners in .github/CODEOWNERS (default: @repo-owner; use a team for organizations)
   --contact-handle=<handle>             Security contact handle (default: repo owner)
   --contact-email=<email>               Security contact email
+  --readme-lang=<en|ja>                 Language of the main README (default: en). With en, README.ja.md is added as a translation
   --description-ja=<text>               Short Japanese description for README.ja.md
   --update-actions                      Replace managed GitHub Actions workflows
   --force                               Overwrite files that already exist (default: keep them)
@@ -44,6 +45,7 @@ CONTACT_EMAIL=""
 PROJECT_DESCRIPTION_JA=""
 CONDUCT_CONTACT=""
 CODE_OWNERS=""
+README_LANG="en"
 UPDATE_ACTIONS=false
 FORCE=false
 DRY_RUN=false
@@ -58,6 +60,7 @@ for arg in "$@"; do
     --description-ja=*) PROJECT_DESCRIPTION_JA="${arg#*=}" ;;
     --conduct-contact=*) CONDUCT_CONTACT="${arg#*=}" ;;
     --code-owners=*) CODE_OWNERS="${arg#*=}" ;;
+    --readme-lang=*) README_LANG="${arg#*=}" ;;
     --update-actions) UPDATE_ACTIONS=true ;;
     --force) FORCE=true ;;
     --dry-run) DRY_RUN=true ;;
@@ -95,6 +98,13 @@ fi
 if [ -n "$LANGUAGE" ] && [[ ! "$LANGUAGE" =~ ^(node|go|swift|shell|python)$ ]]; then
   echo -e "${RED}Error: Unsupported language '$LANGUAGE'${NC}"
   echo -e "${BLUE}Supported languages: node, go, swift, shell, python${NC}"
+  exit 1
+fi
+
+# Validate README language
+if [[ ! "$README_LANG" =~ ^(en|ja)$ ]]; then
+  echo -e "${RED}Error: Unsupported README language '$README_LANG'${NC}" >&2
+  echo -e "${BLUE}Supported README languages: en, ja${NC}" >&2
   exit 1
 fi
 
@@ -277,7 +287,8 @@ while IFS= read -r template_file; do
   install_file "$template_file" "$TARGET_DIR/.github/${template_file#"$SCRIPT_DIR/base/.github/"}" --placeholders
 done < <(find "$SCRIPT_DIR/base/.github" -type f ! -name "*.template" | sort)
 
-if [ -f "$SCRIPT_DIR/base/README.ja.md.template" ]; then
+# README が日本語なら、日本語訳の雛形は不要（同じ内容の日本語文書が 2 つできる）
+if [ "$README_LANG" = "en" ] && [ -f "$SCRIPT_DIR/base/README.ja.md.template" ]; then
   install_file "$SCRIPT_DIR/base/README.ja.md.template" "$TARGET_DIR/README.ja.md" --placeholders
 fi
 
@@ -434,7 +445,11 @@ else
   else
     contact_arg="<email-or-url>"
   fi
-  echo "   Example: $0 $(printf '%q' "$TARGET_DIR") $(printf '%q' "$PROJECT_NAME") $(printf '%q' "$REPO_OWNER") $(printf '%q' "$REPO_NAME") --lang=node --force --conduct-contact=$contact_arg"
-  echo "4. Customize README.ja.md with project-specific Japanese content"
-  echo "5. Add language switcher to README.md: **English** | [日本語](README.ja.md)"
+  readme_arg=""
+  [ "$README_LANG" = "en" ] || readme_arg=" --readme-lang=$README_LANG"
+  echo "   Example: $0 $(printf '%q' "$TARGET_DIR") $(printf '%q' "$PROJECT_NAME") $(printf '%q' "$REPO_OWNER") $(printf '%q' "$REPO_NAME") --lang=node --force --conduct-contact=$contact_arg$readme_arg"
+  if [ "$README_LANG" = "en" ]; then
+    echo "4. Customize README.ja.md with project-specific Japanese content"
+    echo "5. Add language switcher to README.md: **English** | [日本語](README.ja.md)"
+  fi
 fi
