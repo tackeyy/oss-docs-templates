@@ -17,8 +17,6 @@ bash ~/templates/oss-docs/apply-templates.sh \
   your-project-name \
   your-github-username \
   your-repo-name \
-  --contact-handle=your-handle \
-  --contact-email=security@example.com \
   --conduct-contact=conduct@example.com
 ```
 
@@ -171,7 +169,8 @@ After applying templates, review and customize:
 - [ ] **CODE_OF_CONDUCT.md**
   - [ ] Contact information
 - [ ] **SECURITY.md**
-  - [ ] Security contact handle and email
+  - [ ] Enable private vulnerability reporting (Settings > Security)
+  - [ ] Optional extra contacts (`--contact-email` / `--contact-handle`)
 - [ ] **.github templates**
   - [ ] Issue labels (if different from defaults)
   - [ ] PR checklist items
