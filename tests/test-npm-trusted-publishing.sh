@@ -30,12 +30,16 @@ echo "$release_job" | grep -Fq "npm install -g npm@^11.5.1" || fail "release mus
 grep -Fq "p.private !== true" "$ci" || fail "release must not run for a package marked private"
 ! echo "$out" | grep -Fq "NPM_TOKEN" || fail "next steps must not ask for an NPM_TOKEN secret"
 echo "$out" | grep -Fiq "trusted publish" || fail "next steps must explain trusted publishing setup"
-echo "$out" | grep -Fq ".github/workflows/ci.yml as a trusted publisher" || fail "next steps must name the workflow to register"
+echo "$out" | grep -Fq "workflow filename" || fail "next steps must name the workflow to register"
+echo "$out" | grep -Eq "^   ci\.yml \(the filename only" || fail "next steps must give the workflow filename, not the path"
+echo "$out" | grep -Fq "@changesets/cli v3" || fail "next steps must mention the @changesets/cli v3 requirement"
 
 # 適用先の .changeset/README.md が起動条件と trusted publishing を説明している
 readme="$t/.changeset/README.md"
 grep -Fq '"private": true' "$readme" || fail "changeset README must explain the private condition"
 grep -Fiq "trusted publish" "$readme" || fail "changeset README must explain trusted publishing"
+grep -Fq "enter only the filename \`ci.yml\`" "$readme" || fail "changeset README must give the workflow filename, not the path"
+grep -Fq "requires \`@changesets/cli\` v3" "$readme" || fail "changeset README must mention the @changesets/cli v3 requirement"
 
 # 生成された検出スクリプトが private を実際に判定する
 detect() {
