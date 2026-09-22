@@ -62,8 +62,13 @@ mkdir -p "$t"
 url='https://example.org/report?a=1&b=2'
 out="$(bash "$APPLY" "$t" p owner repo --conduct-contact="$url" 2>&1)"
 h="$(hint "$out")"
-eval "bash \"$APPLY\" $h" >/dev/null 2>&1 || fail "re-apply hint must run as-is: $h"
-grep -Fq "$url" "$t/CODE_OF_CONDUCT.md" || fail "a URL with & must be written intact"
+# 案内の対象ディレクトリを新しいディレクトリに差し替えて実行し、その生成物を確かめる
+t2="$TEST_ROOT/hint-amp-fresh"
+mkdir -p "$t2"
+h2="$(echo "$h" | sed -E "s#^[^ ]+#$t2#")"
+eval "bash \"$APPLY\" $h2" >/dev/null 2>&1 || fail "re-apply hint must run as-is: $h"
+wait
+grep -Fq "$url" "$t2/CODE_OF_CONDUCT.md" || fail "a URL with & in the hint must reach CODE_OF_CONDUCT.md intact: $h"
 
 # 7) 使い方表示の例は、そのまま実行して成功する
 usage="$(bash "$APPLY" 2>&1 || true)"
