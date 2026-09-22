@@ -7,6 +7,9 @@
 # mypy 2.x はその警告を出してこのテストは失敗する。
 # mypy の「.py が無い」ガード、または pytest の exit 5 ガードを外すと、
 # 生成された run を実行した時点で非 0 になり、このテストは失敗する。
+# 緩和は対象ファイルが 1 件も無いときだけにする。テストがあるのに全件 deselect
+# された exit 5 や、.py があるのに exclude で隠した mypy の exit 2 を成功にすると、
+# このテストは失敗する。
 #
 # ruff、mypy、pytest、または pytest-cov が無いときは、workflow の手順を実行したことにしない。
 # REQUIRE_TOOLS=1 のときは失敗する（CI はこれで、未導入を成功にしない）。
@@ -67,20 +70,46 @@ RUBY
   fi
 }
 
-run_workflow_step() {
+run_workflow_step_capture() {
   local name="$1"
-  local script status
+  local script step_status
   # exit inside $(...) はサブシェルで終わり、親の set -e が失敗を取りこぼすことがある。
-  # 成否はここで見て、出力はファイルに残す。
+  # 成否はファイルに残し、出力もファイルに残す。
   script="$(read_step_run "$workflow" "$name")" || fail "could not read workflow step: $name"
   printf '%s' "$script" >"$TEST_ROOT/step.sh"
   set +e
   (cd "$target" && bash "$TEST_ROOT/step.sh") >"$TEST_ROOT/step.out" 2>&1
-  status=$?
+  step_status=$?
   set -e
+  printf '%s\n' "$step_status" >"$TEST_ROOT/step.status"
   cat "$TEST_ROOT/step.out"
-  if [ "$status" -ne 0 ]; then
-    fail "workflow step '$name' must exit 0 (exit $status; output: $(cat "$TEST_ROOT/step.out"))"
+}
+
+run_workflow_step() {
+  local name="$1"
+  local step_status
+  run_workflow_step_capture "$name"
+  step_status="$(cat "$TEST_ROOT/step.status")"
+  if [ "$step_status" -ne 0 ]; then
+    fail "workflow step '$name' must exit 0 (exit $step_status; output: $(cat "$TEST_ROOT/step.out"))"
+  fi
+}
+
+# 緩和を外すと成功してしまう穴。非 0 で終わり、空ツリー用の成功メッセージを出さないこと。
+assert_step_rejects_hidden_targets() {
+  local name="$1"
+  local must_have="$2"
+  local must_not="$3"
+  local step_status
+  run_workflow_step_capture "$name" >/dev/null
+  step_status="$(cat "$TEST_ROOT/step.status")"
+  if [ "$step_status" -eq 0 ]; then
+    fail "workflow step '$name' must fail (output: $(cat "$TEST_ROOT/step.out"))"
+  fi
+  grep -Fq "$must_have" "$TEST_ROOT/step.out" \
+    || fail "workflow step '$name' must show '$must_have' (output: $(cat "$TEST_ROOT/step.out"))"
+  if grep -Fq "$must_not" "$TEST_ROOT/step.out"; then
+    fail "workflow step '$name' must not waive this run (output: $(cat "$TEST_ROOT/step.out"))"
   fi
 }
 
@@ -113,6 +142,7 @@ export NO_COLOR=1
 export PY_COLORS=0
 export MYPY_CACHE_DIR="$TEST_ROOT/mypy-cache"
 export RUFF_CACHE_DIR="$TEST_ROOT/ruff-cache"
+export PYTEST_ADDOPTS="-p no:cacheprovider"
 
 run_workflow_step "Run ruff check" >/dev/null
 run_workflow_step "Run ruff format check" >/dev/null
@@ -129,5 +159,73 @@ grep -Fq "collected 0 items" "$TEST_ROOT/pytest.out" \
   || fail "pytest must run and collect zero tests on a fresh apply (output: $(cat "$TEST_ROOT/pytest.out"))"
 grep -Fq "treating pytest exit code 5 as success" "$TEST_ROOT/pytest.out" \
   || fail "pytest exit code 5 must be treated as success (output: $(cat "$TEST_ROOT/pytest.out"))"
+
+# テストファイルがあるのに addopts の -m slow で全件 deselect されると、
+# pytest は exit 5 になる。ファイルが残っているので成功にしない。
+mkdir -p "$target/tests"
+cat >"$target/tests/test_sample.py" <<'PY'
+def test_sample() -> None:
+    assert True
+PY
+awk '
+  /^addopts = \[/ && !inserted {
+    print
+    print "    \"-m\","
+    print "    \"slow\","
+    inserted = 1
+    next
+  }
+  { print }
+' "$target/pyproject.toml" >"$TEST_ROOT/pyproject.deselect.toml"
+mv "$TEST_ROOT/pyproject.deselect.toml" "$target/pyproject.toml"
+grep -Fq '"-m",' "$target/pyproject.toml" \
+  || fail "failed to set pytest addopts -m slow"
+assert_step_rejects_hidden_targets \
+  "Run tests" \
+  "deselected" \
+  "treating pytest exit code 5 as success"
+
+# テンプレートの python_files は test_*.py だけなので *_test.py は収集されない。
+# pytest の既定名に含まれるので、ファイルがあるときの exit 5 は成功にしない。
+underscore="$TEST_ROOT/underscore"
+mkdir -p "$underscore"
+bash "$APPLY" "$underscore" sample-pkg owner sample-pkg --lang=python --conduct-contact=conduct@example.org >/dev/null
+target="$underscore"
+workflow="$underscore/.github/workflows/lint.yml"
+cat >"$target/widget_test.py" <<'PY'
+def test_widget() -> None:
+    assert True
+PY
+assert_step_rejects_hidden_targets \
+  "Run tests" \
+  "collected 0 items" \
+  "treating pytest exit code 5 as success"
+
+# .py に型エラーがあっても exclude = ["."] だと mypy は空ツリーと同じ
+# exit 2 とメッセージを出す。ファイルが残っているので成功にしない。
+target="$TEST_ROOT/exclude"
+mkdir -p "$target"
+bash "$APPLY" "$target" sample-pkg owner sample-pkg --lang=python --conduct-contact=conduct@example.org >/dev/null
+workflow="$target/.github/workflows/lint.yml"
+cat >"$target/bad_types.py" <<'PY'
+def broken(x: int) -> str:
+    return x
+PY
+awk '
+  /^\[tool\.mypy\]/ && !inserted {
+    print
+    print "exclude = [\".\"]"
+    inserted = 1
+    next
+  }
+  { print }
+' "$target/pyproject.toml" >"$TEST_ROOT/pyproject.exclude.toml"
+mv "$TEST_ROOT/pyproject.exclude.toml" "$target/pyproject.toml"
+grep -Fq 'exclude = ["."]' "$target/pyproject.toml" \
+  || fail "failed to set mypy exclude"
+assert_step_rejects_hidden_targets \
+  "Run mypy" \
+  "There are no .py[i] files in directory '.'" \
+  "No Python files found; skipping mypy"
 
 echo "All python workflow-after-apply tests passed."
