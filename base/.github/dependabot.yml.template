@@ -14,8 +14,6 @@ updates:
       github-actions:
         patterns:
           - "*"
-    reviewers:
-      - "{{REPO_OWNER}}"
     labels:
       - "dependencies"
       - "github-actions"
