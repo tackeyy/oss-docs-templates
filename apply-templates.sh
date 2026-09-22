@@ -1,6 +1,6 @@
 #!/bin/bash
 # OSS Documentation Templates - Apply Script
-# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> [--lang=<language>] [--update-actions] [--force] [--dry-run] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
+# Usage: ./apply-templates.sh <target-directory> <project-name> <repo-owner> <repo-name> --conduct-contact=<email-or-url> [--lang=<language>] [--update-actions] [--force] [--dry-run] [--license=<apache-2.0|mit>] [--copyright-holder=<name>] [--contact-handle=<handle>] [--contact-email=<email>] [--description-ja=<text>]
 
 set -euo pipefail
 
@@ -26,7 +26,7 @@ Options:
   --force                               Overwrite files that already exist (default: keep them)
   --dry-run                             Show what would be created, overwritten or skipped; write nothing
 USAGE
-  echo -e "${YELLOW}Example: $0 ~/dev/my-project my-project owner repo --lang=node --license=mit${NC}" >&2
+  echo -e "${YELLOW}Example: $0 ~/dev/my-project my-project owner repo --lang=node --license=mit --conduct-contact=conduct@example.com${NC}" >&2
   echo -e "${BLUE}Supported languages: node, go, swift, shell, python${NC}" >&2
 }
 
@@ -424,7 +424,13 @@ else
   echo "2. Customize .github templates for your project"
   echo "3. To add language-specific templates, run with --lang=<language>"
   echo "   Existing files are kept, so add --force to also update .github/dependabot.yml and PULL_REQUEST_TEMPLATE.md"
-  echo "   Example: $0 $TARGET_DIR $PROJECT_NAME $REPO_OWNER $REPO_NAME --lang=node --force --conduct-contact=$CONDUCT_CONTACT"
+  # 案内するコマンドはそのまま貼って実行できるようにする（値を引用し、未指定なら記入を促す）
+  if [ -n "$CONDUCT_CONTACT" ]; then
+    contact_arg="$(printf '%q' "$CONDUCT_CONTACT")"
+  else
+    contact_arg="<email-or-url>"
+  fi
+  echo "   Example: $0 $(printf '%q' "$TARGET_DIR") $(printf '%q' "$PROJECT_NAME") $(printf '%q' "$REPO_OWNER") $(printf '%q' "$REPO_NAME") --lang=node --force --conduct-contact=$contact_arg"
   echo "4. Customize README.ja.md with project-specific Japanese content"
   echo "5. Add language switcher to README.md: **English** | [日本語](README.ja.md)"
 fi

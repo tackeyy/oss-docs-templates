@@ -47,4 +47,29 @@ if bash "$APPLY" "$t" p owner repo --force >/dev/null 2>&1; then
 fi
 grep -Fxq "OURS" "$t/CODE_OF_CONDUCT.md" || fail "a rejected run must not modify CODE_OF_CONDUCT.md"
 
+# 6) 案内する再適用コマンドは、そのまま実行して成功する（報告先を省略した実行でも空値を案内しない。
+#    & を含む URL はシェルで分割されないよう引用する）
+hint() { echo "$1" | sed -nE 's/.*Example: [^ ]*apply-templates\.sh (.*)$/\1/p' | head -1; }
+t="$TEST_ROOT/hint-kept"
+mkdir -p "$t"
+printf 'OURS\n' >"$t/CODE_OF_CONDUCT.md"
+out="$(bash "$APPLY" "$t" p owner repo 2>&1)"
+h="$(hint "$out")"
+[ -n "$h" ] || fail "re-apply hint must be shown"
+! echo "$h" | grep -Eq -- '--conduct-contact=($| )' || fail "re-apply hint must not suggest an empty --conduct-contact: $h"
+t="$TEST_ROOT/hint-amp"
+mkdir -p "$t"
+url='https://example.org/report?a=1&b=2'
+out="$(bash "$APPLY" "$t" p owner repo --conduct-contact="$url" 2>&1)"
+h="$(hint "$out")"
+eval "bash \"$APPLY\" $h" >/dev/null 2>&1 || fail "re-apply hint must run as-is: $h"
+grep -Fq "$url" "$t/CODE_OF_CONDUCT.md" || fail "a URL with & must be written intact"
+
+# 7) 使い方表示の例は、そのまま実行して成功する
+usage="$(bash "$APPLY" 2>&1 || true)"
+ex="$(echo "$usage" | sed -nE 's/.*Example: [^ ]*apply-templates\.sh [^ ]+ (.*)$/\1/p' | sed 's/\x1b\[[0-9;]*m//g')"
+t="$TEST_ROOT/usage-example"
+mkdir -p "$t"
+eval "bash \"$APPLY\" \"$t\" $ex" >/dev/null 2>&1 || fail "usage example must run as-is: $ex"
+
 echo "All conduct contact tests passed."

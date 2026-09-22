@@ -133,10 +133,10 @@ chmod +x ~/dev/templates/oss-docs/apply-templates.sh
 
 ```bash
 # 何が作成・上書き・スキップされるかを、書き込まずに確認する
-bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/your-project ... --dry-run
+bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/your-project ... --conduct-contact=conduct@example.com --dry-run
 
 # 既存のファイルもテンプレートで上書きする（事前に git で差分を確認できる状態にしておく）
-bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/your-project ... --force
+bash ~/dev/templates/oss-docs/apply-templates.sh ~/dev/your-project ... --conduct-contact=conduct@example.com --force
 git diff
 ```
 

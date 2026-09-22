@@ -81,7 +81,7 @@ All language configs include GitHub Actions workflow for automated linting on PR
 - **GitHub Actions ready** - Automated lint checks on every PR
 - **Cost-efficient CI** - Consolidated jobs, dependency caching, short-lived failure artifacts, and grouped dependency updates
 - **Industry standards** - Based on GitHub CLI, AWS CLI, Contributor Covenant
-- **Privacy-conscious** - Contact via X (Twitter) [@3chhe](https://x.com/3chhe) instead of email
+- **Explicit reporting contacts** - The Code of Conduct reporting contact is required (`--conduct-contact`); nothing personal is filled in by default
 
 ## 🎯 Use Cases
 

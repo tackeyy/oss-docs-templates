@@ -80,7 +80,7 @@ bash ~/dev/templates/oss-docs/apply-templates.sh . my-python-app tackeyy my-pyth
    - [ ] テスト実行コマンド
 
 3. **CODE_OF_CONDUCT.md**
-   - [ ] 連絡先（現在: X [@3chhe](https://x.com/3chhe)）
+   - [ ] 報告先（`--conduct-contact` で指定した値）
 
 ## 🆘 ヘルプ
 
