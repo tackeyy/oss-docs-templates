@@ -59,31 +59,37 @@ jobs:
             echo "error: swift build --show-bin-path did not return a directory (got: '${bin_path:-}')" >&2
             exit 1
           fi
-          matches="$(find "$bin_path" -type d -name '*PackageTests.xctest' | sort)"
+          # native emits *PackageTests.xctest; swiftbuild (Swift 6.4+) emits one *.xctest per test target.
+          matches="$(find "$bin_path" -type d -name '*.xctest' | sort)"
           xctest_count="$(printf '%s\n' "$matches" | grep -c . || true)"
           if [ "$xctest_count" -eq 0 ]; then
-            echo "error: no *PackageTests.xctest bundle under ${bin_path}" >&2
+            echo "error: no *.xctest bundle under ${bin_path}" >&2
             exit 1
           fi
-          if [ "$xctest_count" -ne 1 ]; then
-            echo "error: expected one *PackageTests.xctest bundle under ${bin_path}, found ${xctest_count}:" >&2
-            printf '%s\n' "$matches" >&2
-            exit 1
-          fi
-          xctest="$matches"
-          bundle_name="$(basename "$xctest" .xctest)"
-          test_binary="${xctest}/Contents/MacOS/${bundle_name}"
-          if [ ! -f "$test_binary" ]; then
-            echo "error: test executable not found: ${test_binary}" >&2
-            exit 1
-          fi
+          primary=""
+          object_args=()
+          while IFS= read -r xctest; do
+            [ -n "$xctest" ] || continue
+            bundle_name="$(basename "$xctest" .xctest)"
+            test_binary="${xctest}/Contents/MacOS/${bundle_name}"
+            if [ ! -f "$test_binary" ]; then
+              echo "error: test executable not found: ${test_binary}" >&2
+              exit 1
+            fi
+            if [ -z "$primary" ]; then
+              primary="$test_binary"
+            else
+              object_args+=(-object "$test_binary")
+            fi
+          done <<< "$matches"
           profdata="${bin_path}/codecov/default.profdata"
           if [ ! -f "$profdata" ]; then
             echo "error: coverage profile not found: ${profdata}" >&2
             exit 1
           fi
           xcrun llvm-cov export -format="lcov" \
-            "$test_binary" \
+            "$primary" \
+            "${object_args[@]}" \
             -instr-profile "$profdata" > coverage.lcov
 
       - name: Upload coverage
