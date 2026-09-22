@@ -61,15 +61,16 @@ npm install
 The generated `package.json` scripts are only `lint`, `lint:md`, `lint:yaml`, and `lint:sh`.
 The only devDependency is `markdownlint-cli2`. The template does not add `typecheck`, `test`,
 `build`, or `release` scripts, and it does not install TypeScript, Vitest, or changesets.
-`tsconfig.json` and `vitest.config.ts` are only starter config. Generated template documents
-currently have markdownlint violations, so `npm run lint:md` fails immediately after apply.
-`npm run lint` fails as well: it also runs `lint:sh` (`find | xargs -0 shellcheck` without
-`--no-run-if-empty`). With no `*.sh` files, GNU xargs on Linux starts shellcheck with no
-arguments and that script fails. The template does not add any shell scripts. In CI,
-`npm run typecheck`, `npm run lint:md`, `npm run lint:yaml`, `npm run test`, and
+`tsconfig.json` and `vitest.config.ts` are only starter config. After `npm ci`, `npm run lint`
+succeeds. It runs `lint:md` and `lint:sh`. `lint:sh` is `find … | xargs -0 -r shellcheck`.
+With no `*.sh` files, `-r` keeps GNU xargs from starting shellcheck with no arguments.
+BSD xargs accepts `-r` and already skips empty input. The template adds no shell scripts.
+In CI, `npm run typecheck`, `npm run lint:md`, `npm run lint:yaml`, `npm run test`, and
 `npm run build` use `--if-present`: `lint:md` and `lint:yaml` run because those scripts are
 generated; `typecheck`, `test`, and `build` are skipped until you add them. Shellcheck in CI
 is `ludeeus/action-shellcheck` and runs on every CI run, not via an npm script.
+`npm run lint` does not include `lint:yaml`. Install yamllint before that script
+(CI runs `pip install yamllint`).
 
 After you add the missing scripts and dependencies, the setup commands are:
 
