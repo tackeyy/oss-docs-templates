@@ -1,3 +1,12 @@
+**Do not paste real data or tokens.** Assume that anything you post here can be read by others.
+Do not include real credentials, tokens, or personal data.
+Redact them or replace them with dummy values.
+
+**Report vulnerabilities privately.** Please do not report security
+vulnerabilities through public GitHub issues, discussions, or pull requests.
+Use GitHub [Private vulnerability reporting](https://github.com/tackeyy/oss-docs-templates/security/advisories/new),
+as described in [SECURITY.md](https://github.com/tackeyy/oss-docs-templates/security/policy).
+
 ## Description
 
 <!-- Provide a brief summary of your changes -->
@@ -24,17 +33,13 @@ Closes #
 
 ### Test Coverage
 - [ ] Unit tests added/updated
-- [ ] All tests pass locally (`npm test`)
-- [ ] Build succeeds locally (`npm run build`)
+- [ ] All tests pass locally (the project's test command)
+- [ ] Build succeeds locally (if the project has a build step)
 - [ ] Manual testing performed
 
 ### Test Evidence
+
 <!-- Paste test output or describe manual testing steps -->
-```bash
-# Example:
-$ npm test
-✓ All 160 tests passed
-```
 
 ## Checklist
 

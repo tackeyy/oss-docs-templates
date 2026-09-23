@@ -1,11 +1,20 @@
 name: 💡 Feature Request
 description: Suggest a new feature or enhancement
-labels: ["enhancement", "needs-discussion"]
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
         Thank you for suggesting a feature! Please provide details below.
+
+        **Do not paste real data or tokens.** Assume that anything you post here can be read by others.
+        Do not include real credentials, tokens, or personal data.
+        Redact them or replace them with dummy values.
+
+        **Report vulnerabilities privately.** Please do not report security
+        vulnerabilities through public GitHub issues, discussions, or pull requests.
+        Use GitHub [Private vulnerability reporting](https://github.com/tackeyy/oss-docs-templates/security/advisories/new),
+        as described in [SECURITY.md](https://github.com/tackeyy/oss-docs-templates/security/policy).
 
   - type: textarea
     id: problem

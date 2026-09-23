@@ -1,5 +1,5 @@
 name: ❓ Question
-description: Ask a question about using {{PROJECT_NAME}}
+description: Ask a question about using oss-docs-templates
 labels: ["question"]
 body:
   - type: markdown
@@ -7,11 +7,20 @@ body:
       value: |
         Have a question? We're here to help!
 
+        **Do not paste real data or tokens.** Assume that anything you post here can be read by others.
+        Do not include real credentials, tokens, or personal data.
+        Redact them or replace them with dummy values.
+
+        **Report vulnerabilities privately.** Please do not report security
+        vulnerabilities through public GitHub issues, discussions, or pull requests.
+        Use GitHub [Private vulnerability reporting](https://github.com/tackeyy/oss-docs-templates/security/advisories/new),
+        as described in [SECURITY.md](https://github.com/tackeyy/oss-docs-templates/security/policy).
+
   - type: textarea
     id: question
     attributes:
       label: Your question
-      description: What would you like to know about {{PROJECT_NAME}}?
+      description: What would you like to know about oss-docs-templates?
       placeholder: |
         How do I configure this project?
         What usage pattern do you recommend for...?

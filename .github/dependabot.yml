@@ -1,0 +1,23 @@
+# Labels are omitted on purpose. A label listed here is ignored when the
+# repository does not already have it, and Dependabot does not create it.
+# Omitting labels lets Dependabot create its defaults (dependencies and the
+# ecosystem label) and apply them.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore"
+      include: "scope"

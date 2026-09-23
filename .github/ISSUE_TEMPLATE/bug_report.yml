@@ -1,11 +1,20 @@
 name: 🐛 Bug Report
 description: Report a bug or unexpected behavior
-labels: ["bug", "needs-triage"]
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for reporting a bug! Please fill out the sections below to help us fix it.
+
+        **Do not paste real data or tokens.** Assume that anything you post here can be read by others.
+        Do not include real credentials, tokens, or personal data.
+        Redact them or replace them with dummy values.
+
+        **Report vulnerabilities privately.** Please do not report security
+        vulnerabilities through public GitHub issues, discussions, or pull requests.
+        Use GitHub [Private vulnerability reporting](https://github.com/tackeyy/oss-docs-templates/security/advisories/new),
+        as described in [SECURITY.md](https://github.com/tackeyy/oss-docs-templates/security/policy).
 
   - type: textarea
     id: description
@@ -13,7 +22,7 @@ body:
       label: Describe the bug
       description: A clear and concise description of what the bug is
       placeholder: |
-        When I run `{{PROJECT_NAME}} --help`, I get an error...
+        When I run `oss-docs-templates --help`, I get an error...
     validations:
       required: true
 
@@ -23,7 +32,7 @@ body:
       label: Steps to reproduce
       description: Steps to reproduce the behavior
       placeholder: |
-        1. Run `{{PROJECT_NAME}} --help`
+        1. Run `oss-docs-templates --help`
         2. Observe error message
         3. ...
     validations:
@@ -51,8 +60,8 @@ body:
   - type: input
     id: project_version
     attributes:
-      label: "{{PROJECT_NAME}} version"
-      description: Run `{{PROJECT_NAME}} --version` or check your installed package/version
+      label: "oss-docs-templates version"
+      description: Run `oss-docs-templates --version` or check your installed package/version
       placeholder: "1.0.0"
     validations:
       required: true
