@@ -299,15 +299,24 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting! Please fill out the sections below.
+        Thanks for reporting a bug! Please fill out the sections below to help us fix it.
+
+        **Do not paste real data or tokens.** Assume that anything you post here can be read by others.
+        Do not include real credentials, tokens, or personal data.
+        Redact them or replace them with dummy values.
+
+        **Report vulnerabilities privately.** Please do not report security
+        vulnerabilities through public GitHub issues, discussions, or pull requests.
+        Use GitHub [Private vulnerability reporting](https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/security/advisories/new),
+        as described in [SECURITY.md](https://github.com/{{REPO_OWNER}}/{{REPO_NAME}}/security/policy).
 
   - type: textarea
     id: description
     attributes:
       label: Describe the bug
-      description: A clear description of what the bug is
+      description: A clear and concise description of what the bug is
       placeholder: |
-        When I run `zoomy create --start 2026-02-20T10:00:00 --duration 60`, I get...
+        When I ..., I get an error...
     validations:
       required: true
 
@@ -317,9 +326,9 @@ body:
       label: Steps to reproduce
       description: Steps to reproduce the behavior
       placeholder: |
-        1. Run `zoomy create ...`
-        2. Observe error message
-        3. ...
+        1. ...
+        2. ...
+        3. See the error
     validations:
       required: true
 
@@ -328,7 +337,7 @@ body:
     attributes:
       label: Expected behavior
       description: What you expected to happen
-      placeholder: Meeting should be created successfully
+      placeholder: It should work without errors
     validations:
       required: true
 
@@ -336,28 +345,29 @@ body:
     id: actual
     attributes:
       label: Actual behavior
-      description: What actually happened
-      placeholder: Error message shown, meeting not created
+      description: What actually happened (include error messages if any)
+      placeholder: |
+        Error: Authentication failed...
     validations:
       required: true
 
   - type: input
-    id: version
+    id: project_version
     attributes:
-      label: Zoomy version
-      description: Run `zoomy --version`
-      placeholder: "1.0.0"
+      label: Version
+      description: The release or tag you are using, or a commit SHA. For a CLI, the output of `--version`
+      placeholder: "1.0.0 or a commit SHA"
     validations:
       required: true
 
   - type: input
-    id: node
+    id: runtime
     attributes:
-      label: Node.js version
-      description: Run `node --version`
-      placeholder: "v20.10.0"
+      label: Runtime or language version
+      description: e.g., `node --version`, `python --version`, `go version`, `swift --version`
+      placeholder: "Node.js v22.0.0 / Python 3.12 / Go 1.22"
     validations:
-      required: true
+      required: false
 
   - type: input
     id: os
@@ -372,7 +382,7 @@ body:
     id: additional
     attributes:
       label: Additional context
-      description: Any other context, screenshots, or logs
+      description: Any other context, screenshots, or logs that might help
     validations:
       required: false
 ```
