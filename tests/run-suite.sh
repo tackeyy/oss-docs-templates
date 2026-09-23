@@ -5,8 +5,16 @@
 # （何も実行しないまま成功を返さないため）。
 #
 # MISSION_SUITE_REPORT が指定されていれば、全件成功したあと、
-# index の木（git write-tree）が作業ツリーと一致するときだけ
-# mission-suite-report/1 形式の報告（実行件数とその tree SHA）を書く。
+# 報告先を確かめてから、index の木（git write-tree）が作業ツリーと
+# 一致するときだけ mission-suite-report/1 形式の報告（実行件数とその
+# tree SHA）を書く。報告先の確認は作業ツリー一致の確認より前に行う。
+# 報告先の絶対パスが git rev-parse --show-toplevel の配下にあり、
+# git check-ignore -q で ignore されていないときは、宣言を書かずに
+# 理由を stderr に出して非 0 で終わる（報告先が既にあっても無くても同じ。
+# 追跡済みファイルは書き換えない）。リポジトリの外、またはリポジトリ内でも
+# ignore された場所（.mission-state/ 配下など）には書ける。
+# 親ディレクトリが存在しないなどでパスを解決できないときも、宣言を書かずに
+# 理由を stderr に出して非 0 で終わる。
 # 未 stage の変更（git diff --quiet が非 0）か、ignore されていない
 # 未追跡ファイル（git ls-files --others --exclude-standard が非空）があれば、
 # 宣言を書かずに理由を stderr に出して非 0 で終わる。
@@ -40,8 +48,28 @@ fi
 
 echo "$executed test file(s) passed"
 
-# 宣言の tree_sha は index の木なので、書く直前に作業ツリーとの一致を確かめる。
+# 宣言の tree_sha は index の木なので、書く前に報告先と作業ツリーを確かめる。
+# 報告を書いたあとでは、そのファイル自身が作業ツリーをずらす。
 if [ -n "${MISSION_SUITE_REPORT:-}" ]; then
+  report_dir="$(dirname -- "$MISSION_SUITE_REPORT")"
+  if [ ! -d "$report_dir" ]; then
+    echo "refusing to write the suite report: cannot resolve the report path" >&2
+    exit 1
+  fi
+  report_parent="$(cd -- "$report_dir" && pwd -P)" || {
+    echo "refusing to write the suite report: cannot resolve the report path" >&2
+    exit 1
+  }
+  report_abs="${report_parent}/$(basename -- "$MISSION_SUITE_REPORT")"
+  toplevel="$(cd -- "$(git rev-parse --show-toplevel)" && pwd -P)"
+  case "$report_abs" in
+    "$toplevel" | "$toplevel"/*)
+      if ! git check-ignore -q -- "$report_abs"; then
+        echo "refusing to write the suite report: report path is inside the repository and is not ignored" >&2
+        exit 1
+      fi
+      ;;
+  esac
   if ! git diff --quiet; then
     echo "refusing to write the suite report: unstaged changes; git write-tree would not match the working tree" >&2
     exit 1

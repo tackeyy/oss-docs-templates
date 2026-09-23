@@ -3,6 +3,8 @@
 # 生成物とバイト単位で一致することを検査する。
 # テンプレートだけ直して repo 自身が古いままだと、配る設定と自分の設定がずれ、
 # 検査が空回りする。生成物が 0 件のときも失敗する。
+# .github 配下にシンボリックリンクが 1 つでもあれば、生成物側・repo 側とも失敗する
+# （テンプレートは symlink を生成しない）。ファイルの列挙は通常ファイルのみ。
 
 set -euo pipefail
 
@@ -41,12 +43,27 @@ list_github_files() {
   (cd "$root" && find .github -type f | sort)
 }
 
+# find -type f は symlink を省き、cmp はリンク先をたどる。
+# テンプレートは symlink を生成しないので、1 つでもあれば失敗させる。
+assert_no_github_symlinks() {
+  local root="$1"
+  local side="$2"
+  local link
+  while IFS= read -r link; do
+    [ -n "$link" ] || continue
+    fail "$side .github contains a symlink: $link"
+  done < <(cd "$root" && find .github -type l | sort)
+}
+
 target="$TEST_ROOT/applied"
 mkdir -p "$target"
 git -C "$target" init -q
 bash "$APPLY" "$target" oss-docs-templates tackeyy oss-docs-templates \
   --conduct-contact=conduct@example.invalid >/dev/null \
   || fail "apply-templates.sh must succeed"
+
+assert_no_github_symlinks "$target" "generated"
+assert_no_github_symlinks "$SCRIPT_DIR" "repo"
 
 generated=()
 while IFS= read -r rel; do
