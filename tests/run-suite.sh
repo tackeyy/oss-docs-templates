@@ -13,6 +13,8 @@
 # 理由を stderr に出して非 0 で終わる（報告先が既にあっても無くても同じ。
 # 追跡済みファイルは書き換えない）。リポジトリの外、またはリポジトリ内でも
 # ignore された場所（.mission-state/ 配下など）には書ける。
+# 報告先が既にあり、通常ファイルでない（symlink を含む）かリンク数が 2 以上なら、
+# ignore された場所でも拒否する（書き込みがリンク先を書き換えるため）。
 # 親ディレクトリが存在しないなどでパスを解決できないときも、宣言を書かずに
 # 理由を stderr に出して非 0 で終わる。
 # 未 stage の変更（git diff --quiet が非 0）か、ignore されていない
@@ -61,6 +63,18 @@ if [ -n "${MISSION_SUITE_REPORT:-}" ]; then
     exit 1
   }
   report_abs="${report_parent}/$(basename -- "$MISSION_SUITE_REPORT")"
+  # 既存の報告先が symlink や hard link だと、書き込みがリンク先（追跡済みファイルなど）を
+  # 書き換え、ignore された場所に見えても作業ツリーがずれる。通常ファイルで、リンク数が 1 のときだけ上書きする。
+  if [ -e "$report_abs" ] || [ -L "$report_abs" ]; then
+    if [ -L "$report_abs" ] || [ ! -f "$report_abs" ]; then
+      echo "refusing to write the suite report: report path exists and is not a regular file" >&2
+      exit 1
+    fi
+    if [ -n "$(find "$report_abs" -maxdepth 0 -links +1)" ]; then
+      echo "refusing to write the suite report: report path has more than one hard link" >&2
+      exit 1
+    fi
+  fi
   toplevel="$(cd -- "$(git rev-parse --show-toplevel)" && pwd -P)"
   case "$report_abs" in
     "$toplevel" | "$toplevel"/*)

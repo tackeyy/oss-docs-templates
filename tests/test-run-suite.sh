@@ -175,4 +175,26 @@ git -C "$repo" check-ignore -q -- "$report" || fail "report path under .mission-
 [ "$(json_field "$report" executed)" = "1" ] || fail "ignored-dir report must count 1 executed test"
 [ "$(json_field "$report" tree_sha)" = "$(git -C "$repo" write-tree)" ] || fail "ignored-dir report tree_sha must match git write-tree"
 
+# 12) 報告先が ignore された場所にある、追跡済みファイルへの symlink / hard link: 非 0 で、追跡済みファイルを書き換えない
+for kind in symlink hardlink; do
+  repo="$TEST_ROOT/link-$kind"
+  make_repo "$repo"
+  printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
+  printf '.mission-state/\n' >"$repo/.gitignore"
+  printf 'tracked\n' >"$repo/tracked.txt"
+  git -C "$repo" add -A
+  mkdir -p "$repo/.mission-state"
+  if [ "$kind" = symlink ]; then
+    ln -s ../tracked.txt "$repo/.mission-state/suite-report.json"
+  else
+    ln "$repo/tracked.txt" "$repo/.mission-state/suite-report.json"
+  fi
+  report="$repo/.mission-state/suite-report.json"
+  git -C "$repo" check-ignore -q -- "$report" || fail "$kind report path must be ignored"
+  if (cd "$repo" && MISSION_SUITE_REPORT="$report" bash tests/run-suite.sh >/dev/null 2>&1); then
+    fail "$kind report path to a tracked file must exit non-zero"
+  fi
+  [ "$(cat "$repo/tracked.txt")" = "tracked" ] || fail "$kind report path must not overwrite the tracked file"
+done
+
 echo "All run-suite tests passed."
