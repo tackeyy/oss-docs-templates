@@ -62,8 +62,9 @@ jobs:
       # exit 2 は他の致命エラーにも使う。成功にしてよいのは、.py が 1 件も無く、
       # かつその空ツリーのメッセージのときだけ。.py があるのに exclude などで
       # 同じメッセージになった場合は失敗させる。
-      # ファイルの有無は find で見る。.git などの VCS メタデータ、ツールのキャッシュ、
-      # 仮想環境、node_modules はプロジェクトのソースではないので降りない。
+      # .py の有無は exit 2 のときだけ find で見る。それ以外の終了コードでは find を実行しない。
+      # .git などの VCS メタデータ、ツールのキャッシュ、仮想環境、node_modules は
+      # プロジェクトのソースではないので降りない。
       # 不正な設定値（未知のキー、boolean に文字列、解釈できない python_version など）は
       # mypy がメッセージを出しても exit 0 になることがある。このステップはそれを失敗にできない。
       # 不正な exclude 正規表現のような致命的な設定は exit 2 のまま失敗する。
@@ -75,19 +76,20 @@ jobs:
           status=$?
           set -e
           printf '%s\n' "$output"
-          py_files="$(
-            find . \
-              \( -name .git -o -name .hg -o -name .svn \
-                 -o -name __pycache__ -o -name .mypy_cache -o -name .ruff_cache \
-                 -o -name .pytest_cache -o -name .venv -o -name venv \
-                 -o -name node_modules \) -prune \
-              -o -type f -name '*.py' -print -quit
-          )"
-          if [ "$status" -eq 2 ] \
-            && [ -z "$py_files" ] \
-            && printf '%s\n' "$output" | grep -Fq "There are no .py[i] files in directory '.'"; then
-            echo "No Python files found; skipping mypy"
-            exit 0
+          if [ "$status" -eq 2 ]; then
+            py_files="$(
+              find . \
+                \( -name .git -o -name .hg -o -name .svn \
+                   -o -name __pycache__ -o -name .mypy_cache -o -name .ruff_cache \
+                   -o -name .pytest_cache -o -name .venv -o -name venv \
+                   -o -name node_modules \) -prune \
+                -o -type f -name '*.py' -print -quit
+            )"
+            if [ -z "$py_files" ] \
+              && printf '%s\n' "$output" | grep -Fq "There are no .py[i] files in directory '.'"; then
+              echo "No Python files found; skipping mypy"
+              exit 0
+            fi
           fi
           exit "$status"
 

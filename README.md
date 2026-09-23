@@ -219,7 +219,7 @@ After applying templates, review and customize:
 - ✅ Gated release job: changesets-based npm publish with [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC, no npm token). It runs only on a push to `main`, after the quality job succeeds, and only when `package.json` has a `release` script, `.changeset/config.json` exists, and the package is not `"private": true`. The generated package.json is `"private": true` and has no `release` script. The template copies `.changeset/README.md`, not `.changeset/config.json`.
 
 ### Go
-- ✅ Linter: golangci-lint (includes errcheck, gosimple, govet, staticcheck, etc.)
+- ✅ Linter: golangci-lint (v2 standard set: errcheck, govet, ineffassign, staticcheck, unused; plus misspell, revive)
 - ✅ Test framework: Go testing package
 - ✅ Coverage: Built-in go test -cover
 
