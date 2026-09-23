@@ -9,7 +9,12 @@
 # - 報告先がリポジトリ内の ignore されたディレクトリ配下なら成功して報告を書く
 # - 未 stage の変更、または ignore されていない未追跡ファイルがあれば報告を書かず非 0
 # - ignore されたファイルだけでは成功して報告を書く
+# - ignore された、または未追跡の tests/test-*.sh があれば、テストを実行せず非 0 で報告を書かない
+# - assume-unchanged または skip-worktree があれば、テストを実行せず非 0 で報告を書かない
+# - 実行中に index が変わり git write-tree が実行前と違えば、報告を書かず非 0
+# - 報告先の親ディレクトリが無ければ、テストを実行せず非 0 で報告を書かない
 # - MISSION_SUITE_REPORT が無ければ、作業ツリーが汚れていても成功する
+# - MISSION_SUITE_REPORT が無ければ、ignore されたテストも含め、上の状態でも成功する
 
 set -euo pipefail
 
@@ -196,5 +201,130 @@ for kind in symlink hardlink; do
   fi
   [ "$(cat "$repo/tracked.txt")" = "tracked" ] || fail "$kind report path must not overwrite the tracked file"
 done
+
+# 13) ignore されたテストファイル: 実行せず、宣言を書かず非 0
+repo="$TEST_ROOT/ignored-test"
+make_repo "$repo"
+marker="$TEST_ROOT/ignored-test-ran"
+printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
+printf 'tests/test-z.sh\n' >"$repo/.gitignore"
+printf '#!/bin/bash\ntouch %q\nexit 0\n' "$marker" >"$repo/tests/test-z.sh"
+git -C "$repo" add -A
+git -C "$repo" check-ignore -q -- tests/test-z.sh || fail "tests/test-z.sh must be ignored"
+if git -C "$repo" ls-files --error-unmatch -- tests/test-z.sh >/dev/null 2>&1; then
+  fail "tests/test-z.sh must not be in the index"
+fi
+git -C "$repo" diff --quiet || fail "ignored-test fixture must have no unstaged changes"
+[ -z "$(git -C "$repo" ls-files --others --exclude-standard)" ] || fail "ignored-test fixture must have no untracked files"
+report="$TEST_ROOT/ignored-test-report.json"
+if out="$(cd "$repo" && MISSION_SUITE_REPORT="$report" bash tests/run-suite.sh 2>&1)"; then
+  fail "ignored test file must make the suite exit non-zero"
+fi
+echo "$out" | grep -Fq "not in the index" || fail "ignored test file must be explained on stderr (got: $out)"
+[ ! -e "$report" ] || fail "ignored test file must not write a report"
+[ ! -e "$marker" ] || fail "ignored test file must not be executed"
+
+# 14) MISSION_SUITE_REPORT 無しなら、ignore されたテストも実行して成功する
+repo="$TEST_ROOT/ignored-test-noreport"
+make_repo "$repo"
+marker="$TEST_ROOT/ignored-test-noreport-ran"
+printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
+printf 'tests/test-z.sh\n' >"$repo/.gitignore"
+printf '#!/bin/bash\ntouch %q\nexit 0\n' "$marker" >"$repo/tests/test-z.sh"
+git -C "$repo" add -A
+(cd "$repo" && env -u MISSION_SUITE_REPORT bash tests/run-suite.sh >/dev/null) \
+  || fail "suite without MISSION_SUITE_REPORT must run ignored tests and exit 0"
+[ -e "$marker" ] || fail "suite without MISSION_SUITE_REPORT must execute the ignored test"
+
+# 15) assume-unchanged / skip-worktree: 内容が変わっていても宣言を書かず非 0。印が残らなければ未実行
+for flag in assume-unchanged skip-worktree; do
+  repo="$TEST_ROOT/$flag"
+  make_repo "$repo"
+  marker="$TEST_ROOT/$flag-ran"
+  printf '#!/bin/bash\ntouch %q\nexit 0\n' "$marker" >"$repo/tests/test-a.sh"
+  printf 'original\n' >"$repo/tracked.txt"
+  git -C "$repo" add -A
+  git -C "$repo" update-index "--$flag" tracked.txt
+  printf 'changed\n' >"$repo/tracked.txt"
+  git -C "$repo" diff --quiet || fail "$flag fixture must not show up in git diff"
+  case "$flag" in
+    assume-unchanged) expect_tag=h ;;
+    skip-worktree) expect_tag=S ;;
+  esac
+  got="$(git -C "$repo" ls-files -v -- tracked.txt)"
+  [ "$got" = "$expect_tag tracked.txt" ] || fail "$flag fixture must be marked $expect_tag in git ls-files -v (got: $got)"
+  report="$TEST_ROOT/$flag-report.json"
+  if out="$(cd "$repo" && MISSION_SUITE_REPORT="$report" bash tests/run-suite.sh 2>&1)"; then
+    fail "$flag must make the suite exit non-zero"
+  fi
+  echo "$out" | grep -Fq "$flag" || fail "$flag must be explained on stderr (got: $out)"
+  [ ! -e "$report" ] || fail "$flag must not write a report"
+  [ ! -e "$marker" ] || fail "$flag must not execute tests"
+
+  repo="$TEST_ROOT/$flag-noreport"
+  make_repo "$repo"
+  printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
+  printf 'original\n' >"$repo/tracked.txt"
+  git -C "$repo" add -A
+  git -C "$repo" update-index "--$flag" tracked.txt
+  printf 'changed\n' >"$repo/tracked.txt"
+  (cd "$repo" && env -u MISSION_SUITE_REPORT bash tests/run-suite.sh >/dev/null) \
+    || fail "suite without MISSION_SUITE_REPORT must succeed with $flag"
+done
+
+# 16) 実行中に別の追跡ファイルを書き換えて git add する: テストは走るが宣言は書かない
+repo="$TEST_ROOT/index-changed"
+make_repo "$repo"
+marker="$TEST_ROOT/index-changed-ran"
+printf 'original\n' >"$repo/tracked.txt"
+{
+  printf '#!/bin/bash\n'
+  printf 'touch %q\n' "$marker"
+  printf 'printf '\''changed\\n'\'' > tracked.txt\n'
+  printf 'git add tracked.txt\n'
+  printf 'exit 0\n'
+} >"$repo/tests/test-a.sh"
+git -C "$repo" add -A
+report="$TEST_ROOT/index-changed-report.json"
+if out="$(cd "$repo" && MISSION_SUITE_REPORT="$report" bash tests/run-suite.sh 2>&1)"; then
+  fail "index change during the suite must exit non-zero"
+fi
+echo "$out" | grep -Fq "write-tree changed during the suite" || fail "index change during the suite must be explained on stderr (got: $out)"
+[ ! -e "$report" ] || fail "index change during the suite must not write a report"
+[ -e "$marker" ] || fail "index change during the suite must still execute the test"
+
+# 17) MISSION_SUITE_REPORT 無しなら、実行中の index 変更があっても成功する
+repo="$TEST_ROOT/index-changed-noreport"
+make_repo "$repo"
+printf 'original\n' >"$repo/tracked.txt"
+cat >"$repo/tests/test-a.sh" <<'EOF'
+#!/bin/bash
+printf 'changed\n' > tracked.txt
+git add tracked.txt
+exit 0
+EOF
+git -C "$repo" add -A
+(cd "$repo" && env -u MISSION_SUITE_REPORT bash tests/run-suite.sh >/dev/null) \
+  || fail "suite without MISSION_SUITE_REPORT must succeed when a test changes the index"
+[ "$(cat "$repo/tracked.txt")" = "changed" ] || fail "suite without MISSION_SUITE_REPORT must run the index-changing test"
+
+# 18) 報告先の親ディレクトリが無い: テストを実行せず、宣言を書かず非 0
+repo="$TEST_ROOT/missing-parent"
+make_repo "$repo"
+marker="$TEST_ROOT/missing-parent-ran"
+printf '#!/bin/bash\ntouch %q\nexit 0\n' "$marker" >"$repo/tests/test-a.sh"
+git -C "$repo" add -A
+report="$TEST_ROOT/does-not-exist/report.json"
+if out="$(cd "$repo" && MISSION_SUITE_REPORT="$report" bash tests/run-suite.sh 2>&1)"; then
+  fail "missing report parent directory must exit non-zero"
+fi
+echo "$out" | grep -Fq "cannot resolve the report path" || fail "missing report parent must be explained on stderr (got: $out)"
+[ ! -e "$report" ] || fail "missing report parent must not write a report"
+[ ! -e "$marker" ] || fail "missing report parent must not execute tests"
+
+# 19) MISSION_SUITE_REPORT 無しなら、報告先を見ないので成功する
+(cd "$repo" && env -u MISSION_SUITE_REPORT bash tests/run-suite.sh >/dev/null) \
+  || fail "suite without MISSION_SUITE_REPORT must succeed even when a report parent would be missing"
+[ -e "$marker" ] || fail "suite without MISSION_SUITE_REPORT must execute tests even when a report parent would be missing"
 
 echo "All run-suite tests passed."
