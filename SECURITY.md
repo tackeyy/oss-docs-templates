@@ -1,0 +1,40 @@
+# Security Policy
+
+## Supported Versions
+
+This repository has no versioned releases. Security fixes are applied to the latest commit on the `master` branch.
+
+| Version         | Supported          |
+| --------------- | ------------------ |
+| `master` (latest) | :white_check_mark: |
+
+## Reporting a Vulnerability
+
+**Please do not report security vulnerabilities through public GitHub issues, discussions, or pull requests.**
+
+Report vulnerabilities privately through GitHub:
+<https://github.com/tackeyy/oss-docs-templates/security/advisories/new>
+
+Please include as much of the following as you can:
+
+- Type of vulnerability (e.g., injection, authentication bypass, XSS)
+- Paths of the source files related to the vulnerability
+- Steps to reproduce
+- Proof-of-concept or exploit code (if possible)
+- Impact assessment
+
+Do not include real credentials, tokens, or personal data in your report.
+
+## Response Process
+
+This project is maintained on a best-effort basis.
+
+1. We aim to acknowledge your report within **7 days**
+2. We will investigate and keep you informed of our progress
+3. We will release a fix and publish a security advisory when the fix is ready
+
+## Disclosure Policy
+
+- We follow a coordinated disclosure policy
+- Please give us reasonable time to address the vulnerability before public disclosure
+- We will credit you in the security advisory unless you prefer to remain anonymous
