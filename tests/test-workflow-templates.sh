@@ -112,7 +112,7 @@ assert_contains "$TEST_ROOT/node/package.json" '"node": ">=24"'
 go_lint="$TEST_ROOT/go/.github/workflows/lint.yml"
 assert_job_count "$go_lint" 1
 assert_contains "$go_lint" "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
-assert_contains "$go_lint" "actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0"
+assert_contains "$go_lint" "actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0"
 assert_contains "$go_lint" "golangci/golangci-lint-action"
 assert_contains "$go_lint" "go test -race"
 assert_contains "$go_lint" "cache: true"
