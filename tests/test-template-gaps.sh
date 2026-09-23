@@ -1,6 +1,7 @@
 #!/bin/bash
 # Issue #36: 生成物が、新しい repo に無いラベルを指定しないこと、白紙 Issue を
 # 無効にすること、PR と Issue に機密情報と脆弱性報告の注意があること、
+# 「This repository is public」と言わないこと、
 # gitleaks が git repo でない場所では失敗することを検査する。
 
 set -euo pipefail
@@ -167,6 +168,7 @@ assert_notice "$plain/.github/PULL_REQUEST_TEMPLATE.md"
 
 ! grep -RFq "needs-triage" "$plain/.github" || fail "generated .github must not mention needs-triage"
 ! grep -RFq "needs-discussion" "$plain/.github" || fail "generated .github must not mention needs-discussion"
+! grep -RFq "This repository is public" "$plain/.github" || fail "generated .github must not say the repository is public"
 
 out="$(apply_to node --lang=node)"
 node_dir="${out##*$'\n'}"

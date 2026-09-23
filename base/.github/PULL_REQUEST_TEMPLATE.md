@@ -1,4 +1,4 @@
-**Do not paste real data or tokens.** This repository is public.
+**Do not paste real data or tokens.** Assume that anything you post here can be read by others.
 Do not include real credentials, tokens, or personal data.
 Redact them or replace them with dummy values.
 

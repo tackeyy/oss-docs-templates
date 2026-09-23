@@ -294,7 +294,7 @@ This Code of Conduct is adapted from the [Contributor Covenant](https://www.cont
 ```yaml
 name: 🐛 Bug Report
 description: Report a bug or unexpected behavior
-labels: ["bug", "needs-triage"]
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
@@ -382,7 +382,7 @@ body:
 ```yaml
 name: 💡 Feature Request
 description: Suggest a new feature or enhancement
-labels: ["enhancement", "needs-discussion"]
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
