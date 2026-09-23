@@ -1,8 +1,9 @@
 #!/bin/bash
-# lang-configs/python/workflows/lint.yml の mypy と pytest が、同じ除外ディレクトリを
-# find の -name で落とすことを検査する。生成された workflow ではなくテンプレートを読む。
-# 期待する名前は .git .hg .svn __pycache__ .mypy_cache .ruff_cache .pytest_cache
-# .venv venv node_modules。find が 2 つでなければ失敗する。
+# lang-configs/python/workflows/lint.yml の mypy と pytest が、同じ find の除外式で
+# ディレクトリを落とすことを検査する。生成された workflow ではなくテンプレートを読む。
+# 各 find について \( から \) -prune までの式を取り出し、行継続の \ と改行・連続空白を
+# 1 つの空白に正規化した文字列が、期待する -name と -o の列と完全一致すること。
+# find が 2 つでなければ失敗する。2 つの式が一致しなければ失敗する。
 
 set -euo pipefail
 
@@ -16,38 +17,48 @@ fail() {
 
 [ -f "$LINT" ] || fail "missing lang-configs/python/workflows/lint.yml"
 
-expected=".git .hg .svn __pycache__ .mypy_cache .ruff_cache .pytest_cache .venv venv node_modules"
+expected="-name .git -o -name .hg -o -name .svn -o -name __pycache__ -o -name .mypy_cache -o -name .ruff_cache -o -name .pytest_cache -o -name .venv -o -name venv -o -name node_modules"
 
-sorted_words() {
-  printf '%s\n' "$1" | awk '{ for (i = 1; i <= NF; i++) print $i }' | LC_ALL=C sort | paste -sd ' ' -
+exprs=()
+while IFS= read -r expr; do
+  exprs+=("$expr")
+done < <(awk '
+function normalize(s,    n, i, lines, line, out) {
+  n = split(s, lines, "\n")
+  out = ""
+  for (i = 1; i <= n; i++) {
+    line = lines[i]
+    sub(/\\[[:space:]]*$/, "", line)
+    if (out == "") {
+      out = line
+    } else {
+      out = out " " line
+    }
+  }
+  gsub(/[[:space:]]+/, " ", out)
+  sub(/^ /, "", out)
+  sub(/ $/, "", out)
+  return out
 }
 
-lists=()
-while IFS= read -r list; do
-  lists+=("$list")
-done < <(awk '
-function flush() {
+function flush(    norm, start, rest, end, expr) {
   if (cmd == "") {
     return
   }
-  prune = index(cmd, "-prune")
-  if (prune == 0) {
-    print ""
-    cmd = ""
-    return
-  }
-  before = substr(cmd, 1, prune - 1)
-  rest = ""
-  while (match(before, /-name[[:space:]]+[^[:space:]]+/)) {
-    tok = substr(before, RSTART, RLENGTH)
-    sub(/^-name[[:space:]]+/, "", tok)
-    if (rest != "") {
-      rest = rest " "
+  norm = normalize(cmd)
+  expr = ""
+  start = index(norm, "\\(")
+  if (start > 0) {
+    rest = substr(norm, start + 2)
+    end = index(rest, "\\) -prune")
+    if (end > 0) {
+      expr = substr(rest, 1, end - 1)
+      gsub(/[[:space:]]+/, " ", expr)
+      sub(/^ /, "", expr)
+      sub(/ $/, "", expr)
     }
-    rest = rest tok
-    before = substr(before, RSTART + RLENGTH)
   }
-  print rest
+  print expr
   cmd = ""
 }
 
@@ -85,16 +96,14 @@ END {
 }
 ' "$LINT")
 
-[ "${#lists[@]}" -eq 2 ] || fail "lint.yml must contain exactly 2 find commands (found ${#lists[@]})"
+[ "${#exprs[@]}" -eq 2 ] || fail "lint.yml must contain exactly 2 find commands (found ${#exprs[@]})"
 
-[ "${lists[0]}" = "${lists[1]}" ] || fail "the two find -name exclude lists differ: '${lists[0]}' vs '${lists[1]}'"
+[ "${exprs[0]}" = "${exprs[1]}" ] || fail "the two find exclude expressions differ: '${exprs[0]}' vs '${exprs[1]}'"
 
-expected_sorted="$(sorted_words "$expected")"
 index=0
-for list in "${lists[@]}"; do
+for expr in "${exprs[@]}"; do
   index=$((index + 1))
-  got="$(sorted_words "$list")"
-  [ "$got" = "$expected_sorted" ] || fail "find $index -name exclude list must equal ($expected) (got: $list)"
+  [ "$expr" = "$expected" ] || fail "find $index exclude expression must equal ($expected) (got: $expr)"
 done
 
 echo "All python find-exclude tests passed."

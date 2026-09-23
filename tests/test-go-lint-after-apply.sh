@@ -1,8 +1,9 @@
 #!/bin/bash
 # --lang=go で空ディレクトリに適用した .golangci.yml が、golangci-lint v2 の
 # config verify を通り、errcheck の check-blank が空白代入を報告することを検査する。
-# README の Go の linter 行が挙げる名前は、golangci-lint help linters に
-# linter 名として存在すること。1 件も抽出できないときは失敗する。
+# README の Go の linter 行の括弧内から、英小文字始まりの単語をすべて取り出す。
+# つなぎの語を除いた残りは、golangci-lint help linters に linter 名として存在すること。
+# 1 語でも存在しなければ失敗する。1 件も残らなければ失敗する。
 #
 # go または golangci-lint が無いときは、検証を実行したことにしない。
 # REQUIRE_TOOLS=1 のときは失敗する（CI はこれで、未導入を成功にしない）。
@@ -28,6 +29,22 @@ bash "$APPLY" "$target" p owner repo --lang=go --conduct-contact=conduct@example
 [ -f "$target/.golangci.yml" ] || fail "apply must install .golangci.yml"
 
 # README のその行が挙げる linter 名。0 件は抽出の空回りなので、ツールが無くても失敗する。
+# 括弧内には linter 名のほか、版や文をつなぐ語がある。README は
+# "(v2 standard set: errcheck, ...; plus misspell, revive)" のように書く。
+# つなぐ語は linter 名ではないので候補から除く。除く語はこの配列だけに書く。
+linter_connectors=(v2 standard set plus and includes etc)
+
+is_linter_connector() {
+  local word="$1"
+  local connector
+  for connector in "${linter_connectors[@]}"; do
+    if [ "$word" = "$connector" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 readme_hits=0
 readme_line=""
 while IFS= read -r hit; do
@@ -42,16 +59,11 @@ inside="$(printf '%s\n' "$readme_line" | sed -n 's/.*(\([^)]*\)).*/\1/p')"
 linter_names=()
 while IFS= read -r linter_name; do
   [ -n "$linter_name" ] || continue
+  if is_linter_connector "$linter_name"; then
+    continue
+  fi
   linter_names+=("$linter_name")
-done < <(printf '%s\n' "$inside" | awk -F '[,;]' '{
-  for (i = 1; i <= NF; i++) {
-    token = $i
-    gsub(/^[[:space:]]+|[[:space:]]+$/, "", token)
-    if (match(token, /[a-z][a-z0-9]*$/)) {
-      print substr(token, RSTART, RLENGTH)
-    }
-  }
-}')
+done < <(printf '%s\n' "$inside" | grep -oE '[a-z][a-z0-9]*' || true)
 [ "${#linter_names[@]}" -gt 0 ] || fail "README golangci-lint line listed no linter names"
 
 missing=()
