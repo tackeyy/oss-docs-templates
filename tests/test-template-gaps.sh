@@ -164,6 +164,72 @@ for form in bug_report.yml feature_request.yml question.yml; do
   ! grep -Fq "needs-discussion" "$issues/$form" || fail "$form must not request needs-discussion"
 done
 
+# バグ報告は、ライブラリや Web アプリなど CLI でないプロジェクトにも配る。
+# 説明・再現手順・期待動作・バージョンの placeholder に --help や --version を例として置かない。
+# 言語ランタイムの `node --version` などと、CLI のときの --version の案内は残す。
+# バージョンを書く project_version 項目は残す。
+assert_bug_report_generic() {
+  local file="$1"
+  ! grep -Fq -- '--help' "$file" || fail "bug_report.yml must not use --help as an example"
+  if python3 -c 'import yaml' 2>/dev/null; then
+    python3 - "$file" <<'PY' || fail "bug_report.yml must not use --help or --version as an example, and must keep project_version"
+import sys, yaml
+doc = yaml.safe_load(open(sys.argv[1]))
+by_id = {}
+for item in doc.get("body") or []:
+    if isinstance(item, dict) and item.get("id"):
+        by_id[item["id"]] = item
+pv = by_id.get("project_version")
+if not isinstance(pv, dict):
+    sys.exit(1)
+if (pv.get("validations") or {}).get("required") is not True:
+    sys.exit(1)
+attrs = pv.get("attributes") or {}
+if attrs.get("label") != "Version":
+    sys.exit(1)
+if attrs.get("placeholder") != "1.0.0 or a commit SHA":
+    sys.exit(1)
+desc = attrs.get("description") or ""
+if "--help" in desc or desc.startswith("Run `"):
+    sys.exit(1)
+for item_id in ("description", "reproduction", "expected", "actual"):
+    item = by_id.get(item_id)
+    if not isinstance(item, dict):
+        sys.exit(1)
+    text = (item.get("attributes") or {}).get("placeholder") or ""
+    if "--help" in text or "--version" in text:
+        sys.exit(1)
+PY
+  elif command -v ruby >/dev/null 2>&1; then
+    ruby -ryaml - "$file" <<'RB' || fail "bug_report.yml must not use --help or --version as an example, and must keep project_version"
+doc = YAML.safe_load(File.read(ARGV[0]), aliases: true)
+by_id = {}
+(doc["body"] || []).each do |item|
+  next unless item.is_a?(Hash) && item["id"]
+  by_id[item["id"]] = item
+end
+pv = by_id["project_version"]
+abort "field" unless pv.is_a?(Hash)
+abort "required" unless pv.dig("validations", "required") == true
+attrs = pv["attributes"] || {}
+abort "label" unless attrs["label"] == "Version"
+abort "placeholder" unless attrs["placeholder"] == "1.0.0 or a commit SHA"
+desc = attrs["description"] || ""
+abort "description" if desc.include?("--help") || desc.start_with?("Run `")
+%w[description reproduction expected actual].each do |item_id|
+  item = by_id[item_id]
+  abort "item" unless item.is_a?(Hash)
+  text = (item["attributes"] || {})["placeholder"] || ""
+  abort "example" if text.include?("--help") || text.include?("--version")
+end
+RB
+  else
+    fail "no YAML parser (python3 yaml or ruby) is available"
+  fi
+}
+
+assert_bug_report_generic "$issues/bug_report.yml"
+
 assert_notice "$plain/.github/PULL_REQUEST_TEMPLATE.md"
 
 ! grep -RFq "needs-triage" "$plain/.github" || fail "generated .github must not mention needs-triage"
