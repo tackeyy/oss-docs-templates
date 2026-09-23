@@ -8,9 +8,13 @@
 # （作業ツリーが汚れていても成功し得る）。
 #
 # MISSION_SUITE_REPORT が指定されていれば、テストを実行する前と、
-# 全件成功して宣言を書く直前とで、同じ判定を行う。1 つでも当たれば
-# 宣言を書かず、理由を stderr に出して非 0 で終わる。実行前に当たった
-# ときはテストも実行しない。判定は次のとおり。報告先の確認は、作業ツリーが
+# 各テストを実行する直前と、全件成功して宣言を書く直前とで、同じ判定を行う。
+# 1 つでも当たれば宣言を書かず、理由を stderr に出して非 0 で終わる。
+# 実行前に当たったときはテストを実行しない。各テストの直前に当たったときは、
+# そのテストを実行せずに終わる。
+# 1 つのテストの実行中の変化は、そのテスト自身の挙動として扱う
+# （テストの中身は宣言する木に含まれる）。
+# 判定は次のとおり。報告先の確認は、作業ツリーが
 # index と一致するかの確認より前に行う。
 # - 報告先の絶対パスが git rev-parse --show-toplevel の配下にあり、
 #   git check-ignore -q で ignore されていないときは拒否する（報告先が
@@ -27,20 +31,25 @@
 #   作業ツリーと一致するので許す。
 # - 実行対象の tests/test-*.sh が 1 つでも index に無ければ拒否する
 #   （ignore された、または未追跡のテストファイル）。
+# - 実行対象の tests/test-*.sh の index 上の mode が 100644 または
+#   100755 でないとき、または作業ツリー上で symlink のときは拒否する。
 # - git ls-files -v に assume-unchanged（小文字の状態記号）または
 #   skip-worktree（S）のエントリが 1 つでもあれば拒否する。
-# 実行前の判定を通過したときの git write-tree を控え、宣言を書く直前の
-# write-tree と一致しなければ拒否する。宣言に書く tree_sha はその控えた値
-# である（mission-suite-report/1 形式で、実行件数とあわせて書く）。
+# 実行前の判定を通過したときの git write-tree を控え、各テストの直前と
+# 宣言を書く直前の write-tree と一致しなければ拒否する。各テストの直前には、
+# 実行しようとしているファイルの内容が index の blob と一致すること
+# （git hash-object と git rev-parse ":<path>"）も確かめる。
+# 宣言に書く tree_sha はその控えた値である（mission-suite-report/1 形式で、
+# 実行件数とあわせて書く）。
 
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 # 宣言を書いてよいかを判定する。当たれば理由を stderr に出して 1 で終わる。
-# テストの実行前と、宣言を書く直前とで、同じものを呼ぶ。
+# テストの実行前、各テストの直前、宣言を書く直前で、同じものを呼ぶ。
 check_suite_report_preconditions() {
-  local report_dir report_parent report_abs toplevel untracked suite_test index_flags
+  local report_dir report_parent report_abs toplevel untracked suite_test index_flags index_line index_mode
 
   report_dir="$(dirname -- "$MISSION_SUITE_REPORT")"
   if [ ! -d "$report_dir" ]; then
@@ -89,13 +98,29 @@ check_suite_report_preconditions() {
       echo "refusing to write the suite report: test file is not in the index: $suite_test" >&2
       exit 1
     fi
+    index_line="$(git ls-files -s -- "$suite_test")"
+    index_mode="${index_line%% *}"
+    case "$index_mode" in
+      100644 | 100755) ;;
+      *)
+        echo "refusing to write the suite report: test file is not a regular file in the index: $suite_test" >&2
+        exit 1
+        ;;
+    esac
+    if [ -L "$suite_test" ]; then
+      echo "refusing to write the suite report: test file is a symlink: $suite_test" >&2
+      exit 1
+    fi
   done
   index_flags="$(git ls-files -v)"
-  if printf '%s\n' "$index_flags" | grep -Eq '^[a-z] '; then
+  # here-string にする。パイプにすると、出力がパイプ容量を超えて先頭付近で
+  # 一致したとき、grep -q の早期終了で printf が SIGPIPE になり、pipefail 下で
+  # 条件が偽になる。
+  if grep -Eq '^[a-z] ' <<<"$index_flags"; then
     echo "refusing to write the suite report: index has assume-unchanged entries" >&2
     exit 1
   fi
-  if printf '%s\n' "$index_flags" | grep -Eq '^S '; then
+  if grep -Eq '^S ' <<<"$index_flags"; then
     echo "refusing to write the suite report: index has skip-worktree entries" >&2
     exit 1
   fi
@@ -111,6 +136,19 @@ executed=0
 failed=0
 for test_file in tests/test-*.sh; do
   [ -e "$test_file" ] || continue
+  # 各テストの直前。実行中の変化はそのテスト自身の挙動として扱い、
+  # 次のテストを始める前に、宣言する木と実行する内容が一致するか見る。
+  if [ -n "${MISSION_SUITE_REPORT:-}" ]; then
+    check_suite_report_preconditions
+    if [ "$(git write-tree)" != "$tree_sha" ]; then
+      echo "refusing to write the suite report: git write-tree changed during the suite" >&2
+      exit 1
+    fi
+    if [ "$(git hash-object -- "$test_file")" != "$(git rev-parse ":$test_file")" ]; then
+      echo "refusing to write the suite report: test file content does not match the index: $test_file" >&2
+      exit 1
+    fi
+  fi
   echo "== $test_file"
   if bash "$test_file"; then
     executed=$((executed + 1))
