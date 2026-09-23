@@ -227,6 +227,7 @@ After applying templates, review and customize:
 - ✅ Linter: SwiftLint
 - ✅ Test framework: XCTest
 - ✅ UI Testing: XCUITest
+- ⚠️ Verification scope: this repository's CI checks the generated Swift workflow with actionlint and string checks only. It does not run SwiftLint on the generated `.swiftlint.yml`, because that needs a macOS runner. We will reconsider when a project starts using the Swift template ([#52](https://github.com/tackeyy/oss-docs-templates/issues/52)).
 
 ### Shell
 - ✅ Linter: shellcheck, shfmt
