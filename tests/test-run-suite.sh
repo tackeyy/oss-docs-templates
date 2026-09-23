@@ -2,7 +2,11 @@
 # tests/run-suite.sh の契約を検査する。
 # - tests/test-*.sh を全件実行し、1 件でも失敗すれば非 0 で終わる
 # - 1 件も実行しなければ非 0 で終わる（何も実行しない成功を作らない）
-# - MISSION_SUITE_REPORT が指定されていれば、実行件数と tree SHA を書いた報告を残す
+# - MISSION_SUITE_REPORT が指定されていれば、index の木が作業ツリーと一致するときだけ
+#   実行件数と tree SHA を書いた報告を残す
+# - 未 stage の変更、または ignore されていない未追跡ファイルがあれば報告を書かず非 0
+# - ignore されたファイルだけでは成功して報告を書く
+# - MISSION_SUITE_REPORT が無ければ、作業ツリーが汚れていても成功する
 
 set -euo pipefail
 
@@ -29,6 +33,7 @@ json_field() {
 }
 
 # 1) 全件成功: 件数と tree SHA が報告される
+#    add 済み（未 commit でもよい）なので、index は作業ツリーと一致する
 repo="$TEST_ROOT/pass"
 make_repo "$repo"
 printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
@@ -68,5 +73,59 @@ make_repo "$repo"
 printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
 (cd "$repo" && env -u MISSION_SUITE_REPORT bash tests/run-suite.sh >/dev/null) \
   || fail "suite without MISSION_SUITE_REPORT must still exit 0"
+
+# 5) 未 stage の変更: 宣言を書かず非 0
+repo="$TEST_ROOT/unstaged"
+make_repo "$repo"
+printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
+printf 'tracked\n' >"$repo/tracked.txt"
+git -C "$repo" add -A
+printf 'dirty\n' >>"$repo/tracked.txt"
+report="$TEST_ROOT/unstaged-report.json"
+if out="$(cd "$repo" && MISSION_SUITE_REPORT="$report" bash tests/run-suite.sh 2>&1)"; then
+  fail "unstaged changes must make the suite exit non-zero"
+fi
+echo "$out" | grep -Fq "unstaged changes" || fail "unstaged changes must be explained on stderr (got: $out)"
+[ ! -e "$report" ] || fail "unstaged changes must not write a report"
+
+# 6) ignore されていない未追跡ファイル: 宣言を書かず非 0
+repo="$TEST_ROOT/untracked"
+make_repo "$repo"
+printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
+git -C "$repo" add -A
+printf 'extra\n' >"$repo/untracked-not-ignored"
+report="$TEST_ROOT/untracked-report.json"
+if out="$(cd "$repo" && MISSION_SUITE_REPORT="$report" bash tests/run-suite.sh 2>&1)"; then
+  fail "untracked files must make the suite exit non-zero"
+fi
+echo "$out" | grep -Fq "untracked files" || fail "untracked files must be explained on stderr (got: $out)"
+[ ! -e "$report" ] || fail "untracked files must not write a report"
+
+# 7) ignore されたファイルだけ: 成功して報告を書く
+repo="$TEST_ROOT/ignored"
+make_repo "$repo"
+printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
+printf 'ignored.txt\n' >"$repo/.gitignore"
+git -C "$repo" add -A
+printf 'noise\n' >"$repo/ignored.txt"
+git -C "$repo" check-ignore -q ignored.txt || fail "ignored.txt must be ignored"
+report="$TEST_ROOT/ignored-report.json"
+(cd "$repo" && MISSION_SUITE_REPORT="$report" bash tests/run-suite.sh >/dev/null) \
+  || fail "ignored files alone must still allow the suite report"
+[ "$(json_field "$report" schema)" = "mission-suite-report/1" ] || fail "ignored-only report schema"
+[ "$(json_field "$report" status)" = "complete" ] || fail "ignored-only report status"
+[ "$(json_field "$report" executed)" = "1" ] || fail "ignored-only report must count 1 executed test"
+[ "$(json_field "$report" tree_sha)" = "$(git -C "$repo" write-tree)" ] || fail "ignored-only report tree_sha must match git write-tree"
+
+# 8) 報告先が無ければ、作業ツリーが汚れていても成功する
+repo="$TEST_ROOT/dirty-noreport"
+make_repo "$repo"
+printf '#!/bin/bash\nexit 0\n' >"$repo/tests/test-a.sh"
+printf 'tracked\n' >"$repo/tracked.txt"
+git -C "$repo" add -A
+printf 'dirty\n' >>"$repo/tracked.txt"
+printf 'extra\n' >"$repo/untracked-not-ignored"
+(cd "$repo" && env -u MISSION_SUITE_REPORT bash tests/run-suite.sh >/dev/null) \
+  || fail "suite without MISSION_SUITE_REPORT must succeed even when the working tree is dirty"
 
 echo "All run-suite tests passed."

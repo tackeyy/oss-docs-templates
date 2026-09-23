@@ -4,8 +4,13 @@
 # 1 件でも失敗すれば非 0 で終わる。1 件も実行しなければ非 0 で終わる
 # （何も実行しないまま成功を返さないため）。
 #
-# MISSION_SUITE_REPORT が指定されていれば、全件成功したときだけ
-# mission-suite-report/1 形式の報告（実行件数と git write-tree の tree SHA）を書く。
+# MISSION_SUITE_REPORT が指定されていれば、全件成功したあと、
+# index の木（git write-tree）が作業ツリーと一致するときだけ
+# mission-suite-report/1 形式の報告（実行件数とその tree SHA）を書く。
+# 未 stage の変更（git diff --quiet が非 0）か、ignore されていない
+# 未追跡ファイル（git ls-files --others --exclude-standard が非空）があれば、
+# 宣言を書かずに理由を stderr に出して非 0 で終わる。
+# stage 済みで未 commit の変更は、write-tree が作業ツリーと一致するので許す。
 
 set -euo pipefail
 
@@ -35,7 +40,18 @@ fi
 
 echo "$executed test file(s) passed"
 
+# 宣言の tree_sha は index の木なので、書く直前に作業ツリーとの一致を確かめる。
 if [ -n "${MISSION_SUITE_REPORT:-}" ]; then
+  if ! git diff --quiet; then
+    echo "refusing to write the suite report: unstaged changes; git write-tree would not match the working tree" >&2
+    exit 1
+  fi
+  untracked="$(git ls-files --others --exclude-standard)"
+  if [ -n "$untracked" ]; then
+    echo "refusing to write the suite report: untracked files; git write-tree would not match the working tree" >&2
+    printf '%s\n' "$untracked" >&2
+    exit 1
+  fi
   tree_sha="$(git write-tree)"
   printf '{"schema": "mission-suite-report/1", "status": "complete", "executed": %d, "tree_sha": "%s"}\n' \
     "$executed" "$tree_sha" >"$MISSION_SUITE_REPORT"
